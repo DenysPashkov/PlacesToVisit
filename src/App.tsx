@@ -5,8 +5,6 @@ import AddButton from "./components/addButton";
 import Map from "./components/map";
 
 function App() {
-  const [count, setCount] = useState(0);
-
   return (
     <>
       <div style={{ position: "relative", height: "100%" }}>
