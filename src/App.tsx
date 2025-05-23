@@ -1,8 +1,7 @@
 import { useState } from "react";
-import SideBar from './components/sideBar'
-import Profile from './components/Profile'
-import AddButton from './components/AddButton'
-
+import SideBar from "./components/sideBar";
+import Profile from "./components/profile";
+import AddButton from "./components/addButton";
 
 function App() {
   const [count, setCount] = useState(0);
@@ -15,7 +14,7 @@ function App() {
             position: "absolute",
             width: "100%",
             height: "100%",
-            backgroundColor: "red",
+            backgroundColor: "lightgray",
           }}
         >
           {" "}
