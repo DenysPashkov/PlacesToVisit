@@ -1,4 +1,8 @@
 import { useState } from "react";
+import SideBar from './components/sideBar'
+import Profile from './components/Profile'
+import AddButton from './components/AddButton'
+
 
 function App() {
   const [count, setCount] = useState(0);
@@ -28,10 +32,8 @@ function App() {
             justifyContent: "space-between",
           }}
         >
-          <div
-            style={{ backgroundColor: "white", width: "400px", height: "100%" }}
-          >
-            side bar
+          <div>
+            <SideBar />
           </div>
           <div
             style={{
@@ -40,26 +42,8 @@ function App() {
               justifyContent: "space-between",
             }}
           >
-            <div
-              style={{
-                backgroundColor: "white",
-                borderRadius: "50%",
-                width: "100px",
-                height: "100px",
-              }}
-            >
-              profile
-            </div>
-            <div
-              style={{
-                backgroundColor: "white",
-                borderRadius: "50%",
-                width: "50px",
-                height: "50px",
-              }}
-            >
-              add Button
-            </div>
+            <Profile />
+            <AddButton />
           </div>
         </div>
       </div>

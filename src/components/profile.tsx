@@ -6,7 +6,7 @@ function App() {
   return (
     <>
         <div
-            style={{ backgroundColor: "white", width: "400px", height: "100%" }}
+            style={{ backgroundColor: "white", width: "100px", height: "20%" }}
         >
         profile
         </div>

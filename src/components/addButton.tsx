@@ -6,7 +6,12 @@ function App() {
   return (
     <>
         <div
-            style={{ backgroundColor: "white", width: "400px", height: "100%" }}
+            style={{
+              backgroundColor: "white",
+              borderRadius: "50%",
+              width: "50px",
+              height: "50px",
+            }}
         >
         addButton
         </div>
