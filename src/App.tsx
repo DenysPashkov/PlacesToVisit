@@ -58,7 +58,7 @@ function App() {
                 height: "50px",
               }}
             >
-              +
+              add Button
             </div>
           </div>
         </div>
