@@ -27,7 +27,7 @@ function App() {
             gap: "20px",
             height: "100%",
             width: "100%",
-            padding: "2%",
+            padding: "20px",
             justifyContent: "space-between",
           }}
         >
