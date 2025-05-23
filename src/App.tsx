@@ -2,6 +2,7 @@ import { useState } from "react";
 import SideBar from "./components/sideBar";
 import Profile from "./components/profile";
 import AddButton from "./components/addButton";
+import Map from "./components/map";
 
 function App() {
   const [count, setCount] = useState(0);
@@ -9,16 +10,7 @@ function App() {
   return (
     <>
       <div style={{ position: "relative", height: "100%" }}>
-        <div
-          style={{
-            position: "absolute",
-            width: "100%",
-            height: "100%",
-            backgroundColor: "lightgray",
-          }}
-        >
-          {" "}
-        </div>
+        <Map />
         <div
           style={{
             position: "absolute",
