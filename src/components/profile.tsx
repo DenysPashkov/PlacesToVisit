@@ -1,8 +1,21 @@
 import { useState, useEffect } from "react";
 import { auth, provider } from "../firebase.js";
-import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
+import {
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged,
+  type User,
+} from "firebase/auth";
 
-function ProfileMenu({ user, onLogin, onLogout }) {
+function ProfileMenu({
+  user,
+  onLogin,
+  onLogout,
+}: {
+  user: User | null;
+  onLogin: () => void;
+  onLogout: () => void;
+}) {
   return (
     <div className="absolute mt-2 right-0 bg-white rounded-xl shadow w-40 z-10">
       <ul className="text-left text-sm text-gray-700">
@@ -44,7 +57,7 @@ function ProfileButton() {
 }
 
 export default function Profile() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     // Listener che controlla se c'è un utente loggato già attivo
@@ -85,9 +98,11 @@ export default function Profile() {
   return (
     <details className="relative">
       <ProfileButton />
-      <ProfileMenu user={user} onLogin={handleGoogleLogin} onLogout={handleLogout} />
+      <ProfileMenu
+        user={user}
+        onLogin={handleGoogleLogin}
+        onLogout={handleLogout}
+      />
     </details>
   );
 }
-
-
