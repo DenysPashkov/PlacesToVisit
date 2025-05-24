@@ -19,21 +19,21 @@ function ProfileMenu({
   return (
     <div className="absolute mt-2 right-0 bg-white rounded-xl shadow w-40 z-10">
       <ul className="text-left text-sm text-gray-700">
-        <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Settings</li>
+        <li className="px-4 py-2 cursor-pointer">Settings</li>
 
         {!user ? (
           <li
             onClick={onLogin}
-            className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+            className="px-4 py-2 cursor-pointer"
           >
             Login
           </li>
         ) : (
           <>
-            <li className="px-4 py-2">{user.email}</li>
+            <li className="px-4 py-2">{user.displayName}</li>
             <li
               onClick={onLogout}
-              className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-red-600"
+              className="px-4 py-2 cursor-pointer text-red-600"
             >
               Logout
             </li>
