@@ -22,10 +22,7 @@ function ProfileMenu({
         <li className="px-4 py-2 cursor-pointer">Settings</li>
 
         {!user ? (
-          <li
-            onClick={onLogin}
-            className="px-4 py-2 cursor-pointer"
-          >
+          <li onClick={onLogin} className="px-4 py-2 cursor-pointer">
             Login
           </li>
         ) : (
@@ -44,12 +41,13 @@ function ProfileMenu({
   );
 }
 
-function ProfileButton() {
+function ProfileButton({ user }: { user: User | null }) {
+  console.log("@@@@@ image name: ", user?.photoURL);
   return (
     <summary className="cursor-pointer bg-white w-24 h-24 rounded-full overflow-hidden shadow flex items-center justify-center hover:shadow-lg transition">
       <img
-        src="https://placehold.co/100x100"
-        alt="Generic user"
+        src={user?.photoURL ?? "https://placehold.co/100"}
+        alt={user?.displayName ?? ""}
         className="w-full h-full object-cover"
       />
     </summary>
@@ -97,7 +95,7 @@ export default function Profile() {
 
   return (
     <details className="relative">
-      <ProfileButton />
+      <ProfileButton user={user} />
       <ProfileMenu
         user={user}
         onLogin={handleGoogleLogin}
