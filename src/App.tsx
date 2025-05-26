@@ -5,13 +5,12 @@ import Profile from "./components/profile";
 import AddButton from "./components/addButton";
 import Map from "./components/map";
 import type { Place } from "./models/Place";
+import { Firestore } from "firebase/firestore";
 
 function App() {
   const [places, setPlaces] = useState<Place[]>([]);
+  const [db, setDB] = useState<Firestore | null>(null);
 
-  // useEffect(() => {
-  //   console.log("TODO: I should call the API to get the places here");
-  // }, []);
   return (
     <>
       <div style={{ position: "relative", height: "100%" }}>
@@ -29,7 +28,13 @@ function App() {
           }}
         >
           <div>
-            <SideBar places={places} />
+            <SideBar
+              places={places}
+              setPlaces={(places) => {
+                setPlaces(places);
+              }}
+              db={db}
+            />
           </div>
           <div
             style={{
@@ -38,13 +43,14 @@ function App() {
               justifyContent: "space-between",
             }}
           >
-            <Profile />
+            <Profile setDB={(db) => setDB(db)} />
             <AddButton
               setPlaces={(place) => {
                 const placesCopy = [...places];
                 placesCopy.push(place);
                 setPlaces(placesCopy);
               }}
+              db={db}
             />
           </div>
         </div>
