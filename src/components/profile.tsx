@@ -88,7 +88,7 @@ export default function Profile() {
     if (savedData) {
       const config = JSON.parse(savedData);
       setProfileData(config);
-
+  
       const { auth, provider } = initFirebase({
         apiKey: config.api_key,
         authDomain: config.auth_domain,
@@ -97,7 +97,7 @@ export default function Profile() {
         messagingSenderId: config.messaging_sender_id,
         appId: config.app_id,
       });
-
+  
       setAuth(auth);
       setProvider(provider);
     }
@@ -114,14 +114,10 @@ export default function Profile() {
 
   //Funzione per gestire il salvataggio
   function handleSave() {
-    if (user) {
-      localStorage.setItem(
-        `profileData_${user.uid}`,
-        JSON.stringify(profileData)
-      );
-      console.log("Profilo salvato:", profileData);
-      setShowSettings(false);
-    }
+    localStorage.setItem("profileData", JSON.stringify(profileData));
+    console.log("Profilo salvato senza utente:", profileData);
+    console.log("Profilo salvato:", profileData);
+    setShowSettings(false);
   }
 
   //Monitora lo stato dell'autenticazione Firebase
@@ -129,14 +125,11 @@ export default function Profile() {
     if (!auth) return;
 
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-
       //Se l'utente è autenticato
       if (currentUser) {
         setUser(currentUser);
-
-        const savedData = localStorage.getItem(
-          `profileData_${currentUser.uid}`
-        );
+      
+        const savedData = localStorage.getItem(`profileData_${currentUser.uid}`);
         if (savedData) {
           setProfileData(JSON.parse(savedData));
         } else {
@@ -149,18 +142,8 @@ export default function Profile() {
             app_id: "",
           });
         }
-      } 
-      //Se l'utente ha fatto logout o non è loggato
-      else {
+      } else {
         setUser(null);
-        setProfileData({
-          api_key: "",
-          auth_domain: "",
-          project_id: "",
-          storage_bucket: "",
-          messaging_sender_id: "",
-          app_id: "",
-        });
       }
     });
 
@@ -176,11 +159,10 @@ export default function Profile() {
     try {
       const result = await signInWithPopup(auth, provider);
       setUser(result.user);
-      console.log("Loggato!")
+      console.log("Loggato!");
     } catch (error) {
       console.error(error);
-      console.log("Non Loggato!")
-
+      console.log("Non Loggato!");
     }
   };
 
@@ -193,10 +175,10 @@ export default function Profile() {
     try {
       await signOut(auth);
       setUser(null);
-      console.log("Sloggato!")
+      console.log("Sloggato!");
     } catch (error) {
       console.error(error);
-      console.log("Non sloggato!")
+      console.log("Non sloggato!");
     }
   };
 
