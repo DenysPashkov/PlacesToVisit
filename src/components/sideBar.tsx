@@ -1,6 +1,7 @@
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import type { Place } from "../models/Place";
 
-export default function SideBar() {
+export default function SideBar({ places }: { places: Place[] }) {
   return (
     <>
       <aside className="w-100 bg-white rounded-2xl shadow-xl p-6 h-[90vh] ">
@@ -13,21 +14,28 @@ export default function SideBar() {
           />
         </div>
 
-        <div>
+        {places.length > 0 ? (
           <nav className="flex flex-col gap-3">
-            <div className="bg-white p-4 rounded-lg shadow-md border flex items-center gap-4">
-              <img
-                src="../assets/react.svg"
-                alt="Immagine esempio"
-                className="w-10 h-10 rounded-full object-cover"
-              />
-              <div>
-                <p className="font-medium">Posto 1</p>
-                <p className="text-sm text-gray-500">Distanza</p>
+            {places.map((place) => (
+              <div
+                key={place.id}
+                className="bg-white p-4 rounded-lg shadow-md border flex items-center gap-4"
+              >
+                <img
+                  src={place.image}
+                  alt={place.name}
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+                <div>
+                  <p className="font-medium">{place.name}</p>
+                  <p className="text-sm text-gray-500">??? km</p>
+                </div>
               </div>
-            </div>
+            ))}
           </nav>
-        </div>
+        ) : (
+          <p className="text-gray-500">Nessun posto trovato.</p>
+        )}
       </aside>
     </>
   );

@@ -4,8 +4,14 @@ import SideBar from "./components/sideBar";
 import Profile from "./components/profile";
 import AddButton from "./components/addButton";
 import Map from "./components/map";
+import type { Place } from "./models/Place";
 
 function App() {
+  const [places, setPlaces] = useState<Place[]>([]);
+
+  // useEffect(() => {
+  //   console.log("TODO: I should call the API to get the places here");
+  // }, []);
   return (
     <>
       <div style={{ position: "relative", height: "100%" }}>
@@ -23,7 +29,7 @@ function App() {
           }}
         >
           <div>
-            <SideBar />
+            <SideBar places={places} />
           </div>
           <div
             style={{
@@ -33,7 +39,13 @@ function App() {
             }}
           >
             <Profile />
-            <AddButton />
+            <AddButton
+              setPlaces={(place) => {
+                const placesCopy = [...places];
+                placesCopy.push(place);
+                setPlaces(placesCopy);
+              }}
+            />
           </div>
         </div>
       </div>
