@@ -88,7 +88,7 @@ export default function Profile() {
     if (savedData) {
       const config = JSON.parse(savedData);
       setProfileData(config);
-  
+
       const { auth, provider } = initFirebase({
         apiKey: config.api_key,
         authDomain: config.auth_domain,
@@ -97,7 +97,7 @@ export default function Profile() {
         messagingSenderId: config.messaging_sender_id,
         appId: config.app_id,
       });
-  
+
       setAuth(auth);
       setProvider(provider);
     }
@@ -126,24 +126,25 @@ export default function Profile() {
 
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       //Se l'utente è autenticato
-      if (currentUser) {
-        setUser(currentUser);
-      
-        const savedData = localStorage.getItem(`profileData_${currentUser.uid}`);
-        if (savedData) {
-          setProfileData(JSON.parse(savedData));
-        } else {
-          setProfileData({
-            api_key: "",
-            auth_domain: "",
-            project_id: "",
-            storage_bucket: "",
-            messaging_sender_id: "",
-            app_id: "",
-          });
-        }
-      } else {
+      if (!currentUser) {
         setUser(null);
+        return;
+      }
+
+      setUser(currentUser);
+
+      const savedData = localStorage.getItem(`profileData_${currentUser.uid}`);
+      if (savedData) {
+        setProfileData(JSON.parse(savedData));
+      } else {
+        setProfileData({
+          api_key: "",
+          auth_domain: "",
+          project_id: "",
+          storage_bucket: "",
+          messaging_sender_id: "",
+          app_id: "",
+        });
       }
     });
 
