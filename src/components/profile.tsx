@@ -101,7 +101,7 @@ export default function Profile() {
       setAuth(auth);
       setProvider(provider);
     }
-  }, []);
+  }, [showSettings]);
 
   //Funzione per gestire i cambi input
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
