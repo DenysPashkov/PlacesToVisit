@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { Place } from "../models/Place";
-import { doc, getDoc, type Firestore } from "firebase/firestore";
+import Modal from "./modal.js";
+import {
+  doc,
+  getDoc,
+  type Firestore,
+} from "firebase/firestore";
 
 export default function SideBar({
   places,
@@ -15,6 +20,8 @@ export default function SideBar({
   currentPosition: { lat: number; lon: number } | null;
 }) {
   const [distances, setDistances] = useState<{ [placeId: string]: number }>({});
+  const [showModal, setShowModal] = useState(false);
+  const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
 
   // Function to fetch places from Firestore
   // It retrieves the document with the specified ID and extracts the Places array
@@ -117,6 +124,7 @@ export default function SideBar({
   }, [places, currentPosition]);
 
   return (
+<>
     <aside className="w-100 bg-white rounded-2xl shadow-xl p-6 h-[90vh] pointer-events-auto">
       <div className="mb-4 relative">
         <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-6 h-6" />
@@ -127,32 +135,87 @@ export default function SideBar({
         />
       </div>
 
-      {places.length > 0 ? (
-        <nav className="flex flex-col gap-3">
-          {places.map((place) => (
-            <div
-              key={place.id}
-              className="bg-white p-4 rounded-lg shadow-md border flex items-center gap-4"
-            >
-              <img
-                src={place.image}
-                alt={place.name}
-                className="w-10 h-10 rounded-full object-cover"
-              />
-              <div>
-                <p className="font-medium">{place.name}</p>
-                <p className="text-sm text-gray-500">
-                  {distances[place.id] !== undefined
-                    ? `${distances[place.id].toFixed(2)} km`
-                    : "Calcolo..."}
-                </p>
+        {places.length > 0 ? (
+          <nav className="flex flex-col gap-3">
+            {places.map((place) => (
+              <div
+                key={place.id}
+                onClick={() => {
+                  setSelectedPlace(place);
+                  setShowModal(true);
+                }}
+                className="cursor-pointer bg-white p-4 rounded-lg shadow-md border flex items-center gap-4 hover:bg-gray-50"
+              >
+                <img
+                  src={place.image}
+                  alt={place.name}
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+                <div>
+                  <p className="font-medium">{place.name}</p>
+                  <p className="text-sm text-gray-500">
+                    {distances[place.id] !== undefined
+                      ? `${distances[place.id].toFixed(2)} km`
+                      : "Calcolo..."}
+                  </p>
+                </div>
               </div>
+            ))}
+          </nav>
+        ) : (
+          <p className="text-gray-500">Nessun posto trovato.</p>
+        )}
+      </aside>
+      {showModal && selectedPlace && (
+        <Modal
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          onSave={() => setShowModal(false)}
+          title={selectedPlace.name}
+          actionButtonText="Chiudi"
+        >
+          <div className="space-y-4 text-sm text-gray-700">
+            <div className="flex justify-between border-b pb-1">
+              <span className="font-semibold">Distanza</span>
+              <span>
+                {distances[selectedPlace.id] !== undefined
+                  ? `${distances[selectedPlace.id].toFixed(2)} km`
+                  : "Calcolo..."}
+              </span>
             </div>
-          ))}
-        </nav>
-      ) : (
-        <p className="text-gray-500">Nessun posto trovato.</p>
+            <div className="flex justify-between border-b pb-1">
+              <span className="font-semibold">Latitudine</span>
+              <span>{selectedPlace.location.lat}</span>
+            </div>
+            <div className="flex justify-between border-b pb-1">
+              <span className="font-semibold">Longitudine</span>
+              <span>{selectedPlace.location.lon}</span>
+            </div>
+            <div className="flex justify-between border-b pb-1">
+              <span className="font-semibold">Telefono</span>
+              <span>{selectedPlace.phoneNumber || "Non disponibile"}</span>
+            </div>
+            <span className="font-semibold">Orari di apertura</span>
+            {selectedPlace.workingHour &&
+            selectedPlace.workingHour.length > 0 ? (
+              selectedPlace.workingHour.map((dayHour, index) => {
+                const [day, hours] = dayHour.split(": ");
+                return (
+                  <div
+                    key={index}
+                    className="flex justify-between text-gray-600 text-sm"
+                  >
+                    <span>{day}:</span>
+                    <span>{hours}</span>
+                  </div>
+                );
+              })
+            ) : (
+              <span className="text-gray-500">Non disponibile</span>
+            )}
+          </div>
+        </Modal>
       )}
-    </aside>
+    </>
   );
 }
