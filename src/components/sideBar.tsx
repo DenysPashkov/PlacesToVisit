@@ -1,7 +1,44 @@
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
-import type { Place } from "../models/Place";
+import { Place } from "../models/Place";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  type Firestore,
+} from "firebase/firestore";
+import { useEffect } from "react";
 
-export default function SideBar({ places }: { places: Place[] }) {
+export default function SideBar({
+  places,
+  setPlaces,
+  db,
+}: {
+  places: Place[];
+  setPlaces: (places: Place[]) => void;
+  db: Firestore | null;
+}) {
+  function fetchData() {
+    if (db) {
+      const docRef = doc(db, "LocationsStoring", "4IZszzf7m4xFrLQrGEcr");
+      getDoc(docRef)
+        .then((querySnapshot) => {
+          const data = querySnapshot.data();
+          return data?.Places as any[];
+        })
+        .then((places) => {
+          const constructedPlaces = places.map((place) => {
+            return Place.constructorJson(place);
+          });
+          setPlaces(constructedPlaces);
+        });
+    } else {
+      console.error("Firestore is not initialized.");
+    }
+  }
+  useEffect(() => {
+    fetchData();
+  }, [db]);
   return (
     <>
       <aside className="w-100 bg-white rounded-2xl shadow-xl p-6 h-[90vh] ">
@@ -13,6 +50,8 @@ export default function SideBar({ places }: { places: Place[] }) {
             className="w-full pl-12 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
           />
         </div>
+
+        <button onClick={fetchData}>fetch</button>
 
         {places.length > 0 ? (
           <nav className="flex flex-col gap-3">
