@@ -100,7 +100,6 @@ export default function SideBar({
               lat: place.location.lat,
               lon: place.location.lon,
             });
-            console.log(places);
             return { id: place.id, distance };
           })
         );
