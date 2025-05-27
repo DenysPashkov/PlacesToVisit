@@ -2,23 +2,47 @@ import { useState } from "react";
 import { PlusIcon, MagnifyingGlassIcon } from "@heroicons/react/24/solid";
 import { GooglePlacesManager } from "../models/GooglePlacesManager";
 import type { Place } from "../models/Place";
+import { arrayUnion, doc, updateDoc, type Firestore } from "firebase/firestore";
 
 export default function CircleButton({
   setPlaces,
+  db,
 }: {
   setPlaces: (place: Place) => void;
+  db: Firestore | null;
 }) {
   const [showSearch, setShowSearch] = useState(false);
   const [searchValue, setSearchValue] = useState("");
+
+  function addPlaceToFirestore(newPlace: Place) {
+    if (!db) {
+      console.log("Firestore is not initialized.");
+      return;
+    }
+
+    const docRef = doc(db, "LocationsStoring", "4IZszzf7m4xFrLQrGEcr");
+
+    updateDoc(docRef, {
+      Places: arrayUnion(newPlace.toJSON()),
+    })
+      .then(() => {
+        setPlaces(newPlace);
+      })
+      .catch((error) => {
+        console.error("Error adding place:", error);
+      });
+    {
+    }
+  }
 
   const handleSearch = () => {
     const gpManager = new GooglePlacesManager();
     gpManager
       .findPlaceId(searchValue)
       .then((place) => {
-        console.log("Place found:", place);
         if (place !== null) {
-          setPlaces(place);
+          addPlaceToFirestore(place);
+          return;
         }
       })
       .catch((error) => {

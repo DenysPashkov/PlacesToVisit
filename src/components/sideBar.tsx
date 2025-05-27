@@ -1,9 +1,46 @@
 import { useEffect, useState } from "react";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
-import type { Place } from "../models/Place";
+import { Place } from "../models/Place";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  type Firestore,
+} from "firebase/firestore";
 
-export default function SideBar({ places }: { places: Place[] }) {
+export default function SideBar({
+  places,
+  setPlaces,
+  db,
+}: {
+  places: Place[];
+  setPlaces: (places: Place[]) => void;
+  db: Firestore | null;
+}) {
   const [distances, setDistances] = useState<{ [placeId: string]: number }>({});
+
+  function fetchData() {
+    if (db) {
+      const docRef = doc(db, "LocationsStoring", "4IZszzf7m4xFrLQrGEcr");
+      getDoc(docRef)
+        .then((querySnapshot) => {
+          const data = querySnapshot.data();
+          return data?.Places as any[];
+        })
+        .then((places) => {
+          const constructedPlaces = places.map((place) => {
+            return Place.constructorJson(place);
+          });
+          setPlaces(constructedPlaces);
+        });
+    } else {
+      console.error("Firestore is not initialized.");
+    }
+  }
+  useEffect(() => {
+    fetchData();
+  }, [db]);
 
   function toRad(value: number): number {
     return (value * Math.PI) / 180;

@@ -9,17 +9,20 @@ import {
 } from "firebase/auth";
 import Modal from "./modal.js";
 import { initFirebase } from "../firebase";
+import type { Firestore } from "firebase/firestore";
 
 function ProfileMenu({
   user,
   onLogin,
   onLogout,
   onSettingsClick,
+  setDB,
 }: {
   user: User | null;
   onLogin: () => void;
   onLogout: () => void;
   onSettingsClick: () => void;
+  setDB?: (db: any) => void;
 }) {
   return (
     <div className="absolute mt-2 right-0 bg-white rounded-xl shadow w-40 z-10">
@@ -60,7 +63,11 @@ function ProfileButton({ user }: { user: User | null }) {
   );
 }
 
-export default function Profile() {
+export default function Profile({
+  setDB,
+}: {
+  setDB: (db: Firestore | null) => void;
+}) {
   const [auth, setAuth] = useState<Auth | null>(null);
   const [provider, setProvider] = useState<GoogleAuthProvider | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -91,7 +98,7 @@ export default function Profile() {
       const config = JSON.parse(savedData);
       setProfileData(config);
 
-      const { auth, provider } = initFirebase({
+      const firebaseInit = initFirebase({
         apiKey: config.api_key,
         authDomain: config.auth_domain,
         projectId: config.project_id,
@@ -99,11 +106,18 @@ export default function Profile() {
         messagingSenderId: config.messaging_sender_id,
         appId: config.app_id,
       });
-
-      setAuth(auth);
-      setProvider(provider);
+      if (firebaseInit !== null) {
+        const { auth, provider, db } = firebaseInit;
+        setAuth(auth);
+        setProvider(provider);
+        setDB(db);
+        return;
+      }
+      // setAuth(null);
+      // setProvider(null);
+      // setDB(null);
     }
-  }, []);
+  }, [showSettings]);
 
   //Funzione per gestire i cambi input
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
