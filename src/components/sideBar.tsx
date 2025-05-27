@@ -169,7 +169,7 @@ export default function SideBar({
           onClose={() => setShowModal(false)}
           onSave={() => setShowModal(false)}
           title={selectedPlace.name}
-          saveButtonText="Chiudi"
+          actionButtonText="Chiudi"
         >
           <div className="space-y-4 text-sm text-gray-700">
             <div className="flex justify-between border-b pb-1">
