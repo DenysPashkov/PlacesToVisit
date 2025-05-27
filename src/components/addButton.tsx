@@ -14,6 +14,8 @@ export default function CircleButton({
   const [showSearch, setShowSearch] = useState(false);
   const [searchValue, setSearchValue] = useState("");
 
+  // Function to add a new place to Firestore
+  // It takes a Place object, converts it to JSON, and adds it to the "Places" array in the Firestore document
   function addPlaceToFirestore(newPlace: Place) {
     if (!db) {
       console.log("Firestore is not initialized.");
@@ -57,7 +59,7 @@ export default function CircleButton({
   };
 
   return (
-    <div>
+    <div className="pointer-events-auto">
       <button
         onClick={() => setShowSearch(!showSearch)}
         className="w-12 h-12 flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 transition"

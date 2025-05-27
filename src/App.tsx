@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import SideBar from "./components/sideBar";
 import Profile from "./components/profile";
@@ -10,23 +10,33 @@ import { Firestore } from "firebase/firestore";
 function App() {
   const [places, setPlaces] = useState<Place[]>([]);
   const [db, setDB] = useState<Firestore | null>(null);
+  const [currentPosition, setCurrentPosition] = useState<{
+    lat: number;
+    lon: number;
+  } | null>(null);
+
+  // Initialize Firebase and Firestore
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCurrentPosition({
+            lat: position.coords.latitude,
+            lon: position.coords.longitude,
+          });
+        },
+        (error) => {
+          console.error("Error getting current position:", error);
+        }
+      );
+    }
+  }, []);
 
   return (
     <>
       <div style={{ position: "relative", height: "100%" }}>
-        <Map />
-        <div
-          style={{
-            position: "absolute",
-            display: "flex",
-            flexDirection: "row",
-            gap: "20px",
-            height: "100%",
-            width: "100%",
-            padding: "20px",
-            justifyContent: "space-between",
-          }}
-        >
+        <Map places={places} myPosition={currentPosition} />
+        <div className="absolute top-0 left-0 w-full h-full z-10 gap-5 flex flex-row p-5 justify-between pointer-events-none">
           <div>
             <SideBar
               places={places}
@@ -34,6 +44,7 @@ function App() {
                 setPlaces(places);
               }}
               db={db}
+              currentPosition={currentPosition}
             />
           </div>
           <div

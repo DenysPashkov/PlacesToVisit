@@ -130,8 +130,6 @@ export default function Profile({
   //Funzione per gestire il salvataggio
   function handleSave() {
     localStorage.setItem("profileData", JSON.stringify(profileData));
-    console.log("Profilo salvato senza utente:", profileData);
-    console.log("Profilo salvato:", profileData);
     setShowSettings(false);
   }
 
@@ -176,10 +174,8 @@ export default function Profile({
     try {
       const result = await signInWithPopup(auth, provider);
       setUser(result.user);
-      console.log("Loggato!");
     } catch (error) {
       console.error(error);
-      console.log("Non Loggato!");
     }
   };
 
@@ -192,15 +188,13 @@ export default function Profile({
     try {
       await signOut(auth);
       setUser(null);
-      console.log("Sloggato!");
     } catch (error) {
       console.error(error);
-      console.log("Non sloggato!");
     }
   };
 
   return (
-    <>
+    <div className="pointer-events-auto">
       <details className="relative">
         <ProfileButton user={user} />
         <ProfileMenu
@@ -233,6 +227,6 @@ export default function Profile({
           ))}
         </div>
       </Modal>
-    </>
+    </div>
   );
 }

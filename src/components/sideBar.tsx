@@ -12,15 +12,19 @@ export default function SideBar({
   places,
   setPlaces,
   db,
+  currentPosition,
 }: {
   places: Place[];
   setPlaces: (places: Place[]) => void;
   db: Firestore | null;
+  currentPosition: { lat: number; lon: number } | null;
 }) {
   const [distances, setDistances] = useState<{ [placeId: string]: number }>({});
   const [showModal, setShowModal] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
 
+  // Function to fetch places from Firestore
+  // It retrieves the document with the specified ID and extracts the Places array
   function fetchData() {
     if (db) {
       const docRef = doc(db, "LocationsStoring", "4IZszzf7m4xFrLQrGEcr");
@@ -39,14 +43,20 @@ export default function SideBar({
       console.error("Firestore is not initialized.");
     }
   }
+
+  // Fetch places from Firestore when the component mounts or when db changes
+  // This effect runs only once when the component mounts or when the db changes
   useEffect(() => {
     fetchData();
   }, [db]);
 
+  // Function to convert degrees to radians
+  // This is used in the Haversine formula to calculate distances
   function toRad(value: number): number {
     return (value * Math.PI) / 180;
   }
 
+  // Haversine formula to calculate the distance between two coordinates, retun in kilometers
   function haversineDistance(
     coord1: { lat: number; lon: number },
     coord2: { lat: number; lon: number }
@@ -63,74 +73,67 @@ export default function SideBar({
     return R * c;
   }
 
-  // Funzione che calcola la distanza dall'utente
-  function getDistanceFromUser(destination: {
-    lat: string;
-    lon: string;
-  }): Promise<number> {
+  // Function to calculate the distance from the user's current position to a destination
+  // It takes the user's position and the destination's coordinates as input
+  function getDistanceFromUser(
+    myPosition: { lat: number; lon: number },
+    destination: {
+      lat: string;
+      lon: string;
+    }
+  ): number {
     const lat = parseFloat(destination.lat);
     const lon = parseFloat(destination.lon);
     const destinationNumber = { lat, lon };
-    return new Promise((resolve, reject) => {
-      if (!navigator.geolocation) {
-        reject("Geolocation not supported");
-        return;
-      }
-
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const userCoords = {
-            lat: position.coords.latitude,
-            lon: position.coords.longitude,
-          };
-          const distance = haversineDistance(userCoords, destinationNumber);
-          resolve(distance);
-        },
-        () => resolve(NaN) // Return NaN if geolocation fails
-      );
-    });
+    return haversineDistance(myPosition, destinationNumber);
   }
 
+  // Fetch distances for each place from the user's current position, may can be optimized
+  // to avoid recalculating if the current position hasn't changed
+  // This effect runs whenever places or currentPosition changes
   useEffect(() => {
-    async function fetchDistances() {
-      try {
-        const results = await Promise.all(
-          places.map(async (place) => {
-            const distance = await getDistanceFromUser({
-              lat: place.location.lat,
-              lon: place.location.lon,
-            });
-            return { id: place.id, distance };
-          })
-        );
+    if (currentPosition === null) {
+      return;
+    }
 
-        const distanceMap: { [placeId: string]: number } = {};
-        results.forEach(({ id, distance }) => {
-          distanceMap[id] = distance;
-        });
+    async function fetchDistances(currentPosition: {
+      lat: number;
+      lon: number;
+    }) {
+      const distancesArray = await Promise.all(
+        places.map(async (place) => {
+          const distance = await getDistanceFromUser(
+            currentPosition,
+            place.location
+          );
+          return { [place.id]: distance };
+        })
+      );
 
-        setDistances(distanceMap);
-      } catch (error) {
-        console.error("Failed to fetch distances:", error);
-      }
+      // Merge array of objects into one object
+      const distancesObj = distancesArray.reduce((acc, curr) => {
+        return { ...acc, ...curr };
+      }, {});
+
+      setDistances(distancesObj);
     }
 
     if (places.length > 0) {
-      fetchDistances();
+      fetchDistances(currentPosition);
     }
-  }, [places]);
+  }, [places, currentPosition]);
 
   return (
-    <>
-      <aside className="w-100 bg-white rounded-2xl shadow-xl p-6 h-[90vh] ">
-        <div className="mb-4 relative">
-          <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-6 h-6" />
-          <input
-            type="search"
-            placeholder="Cerca..."
-            className="w-full pl-12 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
-          />
-        </div>
+<>
+    <aside className="w-100 bg-white rounded-2xl shadow-xl p-6 h-[90vh] pointer-events-auto">
+      <div className="mb-4 relative">
+        <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-6 h-6" />
+        <input
+          type="search"
+          placeholder="Cerca..."
+          className="w-full pl-12 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
+        />
+      </div>
 
         {places.length > 0 ? (
           <nav className="flex flex-col gap-3">
