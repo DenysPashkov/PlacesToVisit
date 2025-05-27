@@ -72,6 +72,7 @@ export default function Profile() {
     storage_bucket: "",
     messaging_sender_id: "",
     app_id: "",
+    maps_api_key: "",
   });
   const profileFields = [
     { name: "api_key", label: "API Key" },
@@ -80,6 +81,7 @@ export default function Profile() {
     { name: "storage_bucket", label: "Storage Bucket" },
     { name: "messaging_sender_id", label: "Messaging Sender ID" },
     { name: "app_id", label: "App ID" },
+    { name: "maps_api_key", label: "Maps API Key" },
   ];
 
   //Inizializza Firebase con i dati in LocalStorage
@@ -144,6 +146,7 @@ export default function Profile() {
           storage_bucket: "",
           messaging_sender_id: "",
           app_id: "",
+          maps_api_key: "",
         });
       }
     });
