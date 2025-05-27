@@ -6,12 +6,14 @@ export default function Modal({
   onSave,
   title,
   children,
+  saveButtonText = "Salva",
 }: {
   isOpen: boolean;
   onClose: () => void;
   onSave: () => void;
   title: string;
   children: React.ReactNode;
+  saveButtonText?: string;
 }) {
   if (!isOpen) return null;
 
@@ -30,7 +32,7 @@ export default function Modal({
             }}
             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
           >
-            Salva
+            {saveButtonText}
           </button>
         </div>
       </div>

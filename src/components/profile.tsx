@@ -16,7 +16,6 @@ function ProfileMenu({
   onLogin,
   onLogout,
   onSettingsClick,
-  setDB,
 }: {
   user: User | null;
   onLogin: () => void;
@@ -216,6 +215,7 @@ export default function Profile({
         onClose={() => setShowSettings(false)}
         onSave={handleSave}
         title="Impostazioni profilo"
+        saveButtonText="Salva"
       >
         <div className="flex flex-col space-y-4">
           {profileFields.map(({ name, label }) => (
