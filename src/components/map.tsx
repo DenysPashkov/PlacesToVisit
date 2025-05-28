@@ -1,5 +1,6 @@
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import type { Place } from "../models/Place";
+import { useEffect } from "react";
 import L from "leaflet";
 
 export default function Map({
@@ -7,10 +8,8 @@ export default function Map({
   myPosition,
 }: {
   places: Place[];
-  myPosition: { lat: number; lon: number } | null;
+  myPosition: { lat: number; lon: number };
 }) {
-  // utility function that convert coordinates from object to tuple
-  // this is used to convert the coordinates from the Place model to the format that Leaflet expects
   function getPositionFromCoordinates(coordinate: {
     lat: number | string;
     lon: number | string;
@@ -24,10 +23,7 @@ export default function Map({
     return [coordinate.lat, coordinate.lon];
   }
 
-  // in case of unknow position, there must be a placeholder, to implement
-  return myPosition === null ? (
-    <>loading...</>
-  ) : (
+  return (
     <div className="w-full h-full absolute bg-gray-200 z-0">
       <MapContainer
         center={getPositionFromCoordinates(myPosition)}
@@ -39,15 +35,15 @@ export default function Map({
           attribution='&copy; <a href="https://carto.com/">CARTO</a>'
           url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
         />
-        {places.map((place) => {
-          return <LocationMarker key={place.id} place={place} />;
-        })}
+        {places.map((place) => (
+          <LocationMarker key={place.id} place={place} />
+        ))}
         <MyPositionMarker position={getPositionFromCoordinates(myPosition)} />
+        <RecenterMap position={getPositionFromCoordinates(myPosition)} />
       </MapContainer>
     </div>
   );
 
-  // LocationMarker component to display each place on the map
   function LocationMarker({ place }: { place: Place }) {
     return (
       <Marker position={getPositionFromCoordinates(place.location)}>
@@ -56,8 +52,6 @@ export default function Map({
     );
   }
 
-  // LocationMarkerPopup component to display the popup for each place
-  // TODO: This component must be improved, this version is just a placeholder
   function LocationMarkerPopup({ place }: { place: Place }) {
     return (
       <Popup>
@@ -66,7 +60,7 @@ export default function Map({
             src={place.image}
             alt={place.name}
             style={{
-              width: "100PX",
+              width: "100px",
               height: "100px",
               borderRadius: "5px",
               marginBottom: "8px",
@@ -82,7 +76,6 @@ export default function Map({
     );
   }
 
-  // MyPositionMarker component to display the user's current position
   function MyPositionMarker({ position }: { position: [number, number] }) {
     return (
       <Marker
@@ -90,13 +83,13 @@ export default function Map({
           new L.DivIcon({
             className: "",
             html: `<div style="
-          width: 16px;
-          height: 16px;
-          background: #2196f3;
-          border-radius: 50%;
-          border: 2px solid white;
-          box-shadow: 0 0 6px #2196f3;
-              "></div>`,
+              width: 16px;
+              height: 16px;
+              background: #2196f3;
+              border-radius: 50%;
+              border: 2px solid white;
+              box-shadow: 0 0 6px #2196f3;
+            "></div>`,
             iconSize: [16, 16],
             iconAnchor: [8, 8],
           })
@@ -107,5 +100,18 @@ export default function Map({
         <Popup>You are here</Popup>
       </Marker>
     );
+  }
+
+  // 🔁 Helper component to recenter the map when position changes
+  function RecenterMap({ position }: { position: [number, number] }) {
+    const map = useMap();
+
+    useEffect(() => {
+      map.setView(position, map.getZoom(), {
+        animate: true,
+      });
+    }, [position, map]);
+
+    return null;
   }
 }

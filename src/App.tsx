@@ -13,7 +13,7 @@ function App() {
   const [currentPosition, setCurrentPosition] = useState<{
     lat: number;
     lon: number;
-  } | null>(null);
+  }>({ lat: 40.9, lon: 14.3 });
 
   // Initialize Firebase and Firestore
   useEffect(() => {
