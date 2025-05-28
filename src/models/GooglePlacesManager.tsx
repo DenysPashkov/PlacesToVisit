@@ -82,7 +82,7 @@ export class GooglePlacesManager {
           try {
             const location = result.geometry?.location;
             const photos = result.photos || [];
-            let base64Image = "https://placehold.co/400";
+            let base64Image = "";
 
             if (photos.length > 0) {
               const imageUrl = photos[0].getUrl({ maxWidth: 400 });

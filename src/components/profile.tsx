@@ -10,6 +10,7 @@ import {
 import Modal from "./modal.js";
 import { initFirebase } from "../firebase";
 import type { Firestore } from "firebase/firestore";
+import defaultAvatar from "../assets/profile-img-logout.png";
 
 function ProfileMenu({
   user,
@@ -54,7 +55,7 @@ function ProfileButton({ user }: { user: User | null }) {
   return (
     <summary className="cursor-pointer bg-white w-24 h-24 rounded-full overflow-hidden shadow flex items-center justify-center hover:shadow-lg transition">
       <img
-        src={user?.photoURL ?? "https://placehold.co/100"}
+        src={user?.photoURL ?? defaultAvatar}
         alt={user?.displayName ?? ""}
         className="w-full h-full object-cover"
       />

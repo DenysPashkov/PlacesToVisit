@@ -7,6 +7,7 @@ import {
   getDoc,
   type Firestore,
 } from "firebase/firestore";
+import defaultRestaurant from "../assets/restaurant-img-default.png"
 
 export default function SideBar({
   places,
@@ -147,7 +148,7 @@ export default function SideBar({
                 className="cursor-pointer bg-white p-4 rounded-lg shadow-md border flex items-center gap-4 hover:bg-gray-50"
               >
                 <img
-                  src={place.image}
+                  src={place.image == "" ? defaultRestaurant : place.image}
                   alt={place.name}
                   className="w-10 h-10 rounded-full object-cover"
                 />

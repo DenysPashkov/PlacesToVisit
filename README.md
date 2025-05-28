@@ -1,22 +1,26 @@
 # Places to visit
 
-Il progetto racchiude delle funzionalita' molto semplici per la condivisione di posti dove mangiare da visitare. 
+The project includes very simple features for sharing places to eat and visit.
 
 
-## Tecnologie utilizzate
+## Technologies Used
 
-Per il nostro progetto abbiamo utilizzato:
+For our project, we used:
 
 
 - React (https://react.dev)
 - Tailwind (https://tailwindcss.com/docs/installation/using-vite)
 - Firebase (https://firebase.google.com)
 
-## Primo utilizzo del progetto
+## First Time Setup
 
-- Usa `npm install` prima di avviare per la prima volta il progetto
-- Usa `npm run dev` per avviarlo
+- Run `npm install` before starting the project for the first time
+- Use `npm run dev` to start it
+- Open another terminal and run `cd my-app-backend`
+- Run `npm install`
+- Start the backend with `node server.js`
+- If the project shows any errors after starting, try running `npm install` again
 
-## Primo avvio 
+## First Launch 
 
-Al primo avvio, cliccare sul profilo in alto a sinistra ed inserire le informazioni richieste. Tali informazioni possono essere recuperate in Firebase e salvare. Poi accedere tranquillamente utilizzando Google. 
+At the first launch, click on the profile icon at the top left and enter the required information. This data can be retrieved and saved in Firebase. Then, you can log in easily using Google.
