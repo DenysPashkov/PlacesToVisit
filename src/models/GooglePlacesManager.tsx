@@ -82,7 +82,6 @@ export class GooglePlacesManager {
 
     return new Promise((resolve, reject) => {
       service.getDetails(request, async (result, status) => {
-        console.log("@@@@ ", result);
         if (status === google.maps.places.PlacesServiceStatus.OK && result) {
           try {
             const location = result.geometry?.location;
@@ -171,7 +170,6 @@ export class GooglePlacesManager {
 
   // function required for create the OpeningHour from the information received from google
   createOpeningHours(weekday_text: string[]): OpeningHours {
-    console.log("Test :", weekday_text);
     const daysMap: Record<string, DayName> = {
       Monday: "monday",
       Tuesday: "tuesday",

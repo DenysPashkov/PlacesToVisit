@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { Place } from "../models/Place";
 import Modal from "./modal.js";
-import { doc, getDoc, type Firestore } from "firebase/firestore";
+import { type Firestore } from "firebase/firestore";
 import defaultRestaurant from "../assets/restaurant-img-default.png";
 import { firebaseManager } from "../models/FirebaseManager.js";
 
@@ -110,7 +110,6 @@ export default function SideBar({
             className="w-full pl-12 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
           />
         </div>
-
         {places.length > 0 ? (
           <nav className="flex flex-col gap-3">
             {places.map((place) => (

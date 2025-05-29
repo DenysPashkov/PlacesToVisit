@@ -27,4 +27,17 @@ export class Review {
     this.service = service;
     this.comment = comment;
   }
+
+  toJSON() {
+    return {
+      reviewId: this.reviewId,
+      placeId: this.placeId,
+      reviewer: this.reviewer,
+      food: this.food,
+      price: this.price,
+      location: this.location,
+      service: this.service,
+      comment: this.comment,
+    };
+  }
 }

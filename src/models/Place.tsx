@@ -86,7 +86,6 @@ export class Place {
     if (!json) {
       throw new Error("Invalid JSON data");
     }
-    console.log("json: ", json);
 
     const id = json.id || "";
     const name = json.name || "";

@@ -1,11 +1,15 @@
 import {
   arrayUnion,
+  collection,
   doc,
   Firestore,
   getDoc,
+  getDocs,
+  setDoc,
   updateDoc,
 } from "firebase/firestore";
 import { Place } from "./Place";
+import type { Review } from "./Reviews";
 
 /**
  * Manages Firestore operations related to Places.
@@ -79,7 +83,58 @@ export class firebaseManager {
       .catch((error) => {
         console.error("Error adding place:", error);
       });
-    {
+  }
+
+  static async fetchReviews(
+    db: Firestore,
+    placeId: string,
+    setReviews: (review: Review) => void
+  ) {
+    const reviewRef = collection(
+      db,
+      "LocationsStoring",
+      "4IZszzf7m4xFrLQrGEcr",
+      "Places",
+      placeId,
+      "Reviews"
+    );
+
+    try {
+      const snapshot = await getDocs(reviewRef);
+
+      snapshot.docs.map((doc) => {
+        const data = doc.data();
+      });
+
+      //   return reviews;
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+      //   return [];
     }
+  }
+
+  static addReview(
+    db: Firestore,
+    review: Review,
+    setReviews: (review: Review) => void
+  ) {
+    const reviewRef = doc(
+      collection(
+        db,
+        "LocationsStoring",
+        "4IZszzf7m4xFrLQrGEcr",
+        "Places",
+        review.placeId,
+        "Reviews"
+      )
+    );
+
+    setDoc(reviewRef, review.toJSON())
+      .then(() => {
+        setReviews(review);
+      })
+      .catch((error) => {
+        console.error("Error adding review:", error);
+      });
   }
 }
