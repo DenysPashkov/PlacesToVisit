@@ -4,6 +4,7 @@ import SideBar from "./components/sideBar";
 import Profile from "./components/profile";
 import AddButton from "./components/addButton";
 import Map from "./components/map";
+import BottomBar from "./components/bottomBar";
 import type { Place } from "./models/Place";
 import { Firestore } from "firebase/firestore";
 
@@ -63,7 +64,8 @@ function App() {
               }}
               db={db}
             />
-          </div>
+            
+          </div><BottomBar/>
         </div>
       </div>
     </>
