@@ -1,4 +1,4 @@
-type DayName =
+export type DayName =
   | "monday"
   | "tuesday"
   | "wednesday"
@@ -16,81 +16,28 @@ export type OpeningHours = {
   [key in DayName]: WorkingDay[];
 };
 
-// function required for create the OpeningHour from the information received from google
-function createOpeningHours(weekday_text: string[]): OpeningHours {
-  console.log("Test :", weekday_text);
-  const daysMap: Record<string, DayName> = {
-    Monday: "monday",
-    Tuesday: "tuesday",
-    Wednesday: "wednesday",
-    Thursday: "thursday",
-    Friday: "friday",
-    Saturday: "saturday",
-    Sunday: "sunday",
-  };
-
-  const convertTo24Hour = (timeStr: string): string => {
-    if (!timeStr || typeof timeStr !== "string") {
-      return "00:00";
-    }
-
-    // Normalize different unicode spaces to regular space
-    const clean = timeStr
-      .replace(/[\u2000-\u200F\u202F\u205F\u3000]/g, " ") // all uncommon Unicode space characters
-      .trim();
-
-    const parts = clean.split(/(AM|PM)/i);
-
-    if (parts.length < 2) {
-      return "00:00";
-    }
-
-    const [time, modifier] = parts;
-    let [hours, minutes] = time.trim().split(":").map(Number);
-
-    const isPM = modifier.toLowerCase() === "pm";
-    const isAM = modifier.toLowerCase() === "am";
-
-    if (isPM && hours !== 12) hours += 12;
-    if (isAM && hours === 12) hours = 0;
-
-    return `${hours.toString().padStart(2, "0")}:${minutes
-      .toString()
-      .padStart(2, "0")}`;
-  };
-
-  const output = {} as OpeningHours;
-
-  weekday_text.forEach((entry) => {
-    const [rawDay, rawTimes] = entry.split(": ");
-    const day = daysMap[rawDay];
-
-    if (!day) return;
-
-    if (!rawTimes || rawTimes.toLowerCase() === "closed") {
-      output[day] = [];
-    } else {
-      const ranges = rawTimes.split(",").map((range) => {
-        const [startRaw, endRaw] = range.split("–").map((s) => s.trim());
-        return {
-          start: convertTo24Hour(startRaw),
-          end: convertTo24Hour(endRaw),
-        };
-      });
-      output[day] = ranges;
-    }
-  });
-
-  return output;
-}
-
 export class Place {
+  // google place id
   id: string;
+  // name of the place
   name: string;
+  // location of the place where lat and lot are used as follows [lan, lon]
   location: [number, number];
+  // the first image of the place, got from google places
   image: string;
+  // phone number of the place
   phoneNumber: string;
+  // working hour of the place
   workingHour: OpeningHours;
+
+  // address in a human readable way
+  readableAddress: string;
+  // tags added to this place
+  tags: string[];
+  // url that are correlated to the place, automatically the google position and the website of the place are added
+  urlReferences: string[];
+  // price level taken from google places
+  priceLevel: number;
 
   constructor(
     id: string,
@@ -98,7 +45,11 @@ export class Place {
     location: [number, number],
     image: string,
     phoneNumber: string,
-    workingHour: string[] | OpeningHours
+    workingHour: OpeningHours,
+    readableAddress: string,
+    tags: string[],
+    urlReferences: string[],
+    priceLevel: number
   ) {
     this.id = id;
     this.name = name;
@@ -106,16 +57,15 @@ export class Place {
     this.image = image;
     this.phoneNumber = phoneNumber;
 
-    // Better check to avoid misinterpretation
-    if (Array.isArray(workingHour) && typeof workingHour[0] === "string") {
-      console.log("case 1");
-      this.workingHour = createOpeningHours(workingHour);
-    } else {
-      console.log("case 2");
-      this.workingHour = workingHour as OpeningHours;
-    }
+    this.readableAddress = readableAddress;
+    this.tags = tags;
+    this.urlReferences = urlReferences;
+    this.priceLevel = priceLevel;
+
+    this.workingHour = workingHour as OpeningHours;
   }
 
+  // Used to create the structure of teh data before sending it to firebase
   toJSON() {
     return {
       id: this.id,
@@ -124,13 +74,19 @@ export class Place {
       image: this.image,
       phoneNumber: this.phoneNumber,
       workingHour: this.workingHour,
+      readableAddress: this.readableAddress,
+      tags: this.tags,
+      urlReferences: this.urlReferences,
+      priceLevel: this.priceLevel,
     };
   }
 
+  // This function is used when we're fetchingt the data from firebase
   static constructorJson(json: any): Place {
     if (!json) {
       throw new Error("Invalid JSON data");
     }
+    console.log("json: ", json);
 
     const id = json.id || "";
     const name = json.name || "";
@@ -139,13 +95,22 @@ export class Place {
     const phoneNumber = json.phoneNumber || "";
     const workingHour = json.workingHour || [];
 
+    const readableAddress: string = json.readableAddress;
+    const tags: string[] = json.tags;
+    const urlReferences: string[] = json.urlReferences;
+    const priceLevel: number = json.priceLevel;
+
     const place = new Place(
       id,
       name,
       location,
       image,
       phoneNumber,
-      workingHour
+      workingHour,
+      readableAddress,
+      tags,
+      urlReferences,
+      priceLevel
     );
     return place;
   }
