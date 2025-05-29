@@ -4,6 +4,7 @@ import { Place } from "../models/Place";
 import Modal from "./modal.js";
 import { doc, getDoc, type Firestore } from "firebase/firestore";
 import defaultRestaurant from "../assets/restaurant-img-default.png";
+import { firebaseManager } from "../models/FirebaseManager.js";
 
 export default function SideBar({
   places,
@@ -20,31 +21,15 @@ export default function SideBar({
   const [showModal, setShowModal] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
 
-  // Function to fetch places from Firestore
-  // It retrieves the document with the specified ID and extracts the Places array
-  function fetchData() {
-    if (db) {
-      const docRef = doc(db, "LocationsStoring", "4IZszzf7m4xFrLQrGEcr");
-      getDoc(docRef)
-        .then((querySnapshot) => {
-          const data = querySnapshot.data();
-          return data?.Places as any[];
-        })
-        .then((places) => {
-          const constructedPlaces = places.map((place) => {
-            return Place.constructorJson(place);
-          });
-          setPlaces(constructedPlaces);
-        });
-    } else {
-      console.error("Firestore is not initialized.");
-    }
-  }
-
   // Fetch places from Firestore when the component mounts or when db changes
   // This effect runs only once when the component mounts or when the db changes
   useEffect(() => {
-    fetchData();
+    if (db === null) {
+      return;
+    }
+    firebaseManager.fetchPlaces(db, (places) => {
+      setPlaces(places);
+    });
   }, [db]);
 
   // Function to convert degrees to radians
