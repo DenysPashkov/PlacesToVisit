@@ -2,12 +2,9 @@ import { useEffect, useState } from "react";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { Place } from "../models/Place";
 import Modal from "./modal.js";
-import {
-  doc,
-  getDoc,
-  type Firestore,
-} from "firebase/firestore";
-import defaultRestaurant from "../assets/restaurant-img-default.png"
+import { type Firestore } from "firebase/firestore";
+import defaultRestaurant from "../assets/restaurant-img-default.png";
+import { firebaseManager } from "../models/FirebaseManager.js";
 
 export default function SideBar({
   places,
@@ -18,37 +15,21 @@ export default function SideBar({
   places: Place[];
   setPlaces: (places: Place[]) => void;
   db: Firestore | null;
-  currentPosition: { lat: number; lon: number } | null;
+  currentPosition: [number, number] | null;
 }) {
   const [distances, setDistances] = useState<{ [placeId: string]: number }>({});
   const [showModal, setShowModal] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
 
-  // Function to fetch places from Firestore
-  // It retrieves the document with the specified ID and extracts the Places array
-  function fetchData() {
-    if (db) {
-      const docRef = doc(db, "LocationsStoring", "4IZszzf7m4xFrLQrGEcr");
-      getDoc(docRef)
-        .then((querySnapshot) => {
-          const data = querySnapshot.data();
-          return data?.Places as any[];
-        })
-        .then((places) => {
-          const constructedPlaces = places.map((place) => {
-            return Place.constructorJson(place);
-          });
-          setPlaces(constructedPlaces);
-        });
-    } else {
-      console.error("Firestore is not initialized.");
-    }
-  }
-
   // Fetch places from Firestore when the component mounts or when db changes
   // This effect runs only once when the component mounts or when the db changes
   useEffect(() => {
-    fetchData();
+    if (db === null) {
+      return;
+    }
+    firebaseManager.fetchPlaces(db, (places) => {
+      setPlaces(places);
+    });
   }, [db]);
 
   // Function to convert degrees to radians
@@ -59,16 +40,16 @@ export default function SideBar({
 
   // Haversine formula to calculate the distance between two coordinates, retun in kilometers
   function haversineDistance(
-    coord1: { lat: number; lon: number },
-    coord2: { lat: number; lon: number }
+    coord1: [number, number],
+    coord2: [number, number]
   ): number {
     const R = 6371;
-    const dLat = toRad(coord2.lat - coord1.lat);
-    const dLon = toRad(coord2.lon - coord1.lon);
+    const dLat = toRad(coord2[0] - coord1[0]);
+    const dLon = toRad(coord2[1] - coord1[1]);
     const a =
       Math.sin(dLat / 2) ** 2 +
-      Math.cos(toRad(coord1.lat)) *
-        Math.cos(toRad(coord2.lat)) *
+      Math.cos(toRad(coord1[0])) *
+        Math.cos(toRad(coord2[0])) *
         Math.sin(dLon / 2) ** 2;
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
@@ -77,15 +58,12 @@ export default function SideBar({
   // Function to calculate the distance from the user's current position to a destination
   // It takes the user's position and the destination's coordinates as input
   function getDistanceFromUser(
-    myPosition: { lat: number; lon: number },
-    destination: {
-      lat: string;
-      lon: string;
-    }
+    myPosition: [number, number],
+    destination: [number, number]
   ): number {
-    const lat = parseFloat(destination.lat);
-    const lon = parseFloat(destination.lon);
-    const destinationNumber = { lat, lon };
+    const lat = destination[0];
+    const lon = destination[1];
+    const destinationNumber: [number, number] = [lat, lon];
     return haversineDistance(myPosition, destinationNumber);
   }
 
@@ -97,10 +75,7 @@ export default function SideBar({
       return;
     }
 
-    async function fetchDistances(currentPosition: {
-      lat: number;
-      lon: number;
-    }) {
+    async function fetchDistances(currentPosition: [number, number]) {
       const distancesArray = await Promise.all(
         places.map(async (place) => {
           const distance = await getDistanceFromUser(
@@ -125,17 +100,16 @@ export default function SideBar({
   }, [places, currentPosition]);
 
   return (
-<>
-    <aside className="w-100 bg-white rounded-2xl shadow-xl p-6 h-[90vh] pointer-events-auto">
-      <div className="mb-4 relative">
-        <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-6 h-6" />
-        <input
-          type="search"
-          placeholder="Cerca..."
-          className="w-full pl-12 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
-        />
-      </div>
-
+    <>
+      <aside className="w-100 bg-white rounded-2xl shadow-xl p-6 h-[90vh] pointer-events-auto">
+        <div className="mb-4 relative">
+          <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-6 h-6" />
+          <input
+            type="search"
+            placeholder="Cerca..."
+            className="w-full pl-12 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
+          />
+        </div>
         {places.length > 0 ? (
           <nav className="flex flex-col gap-3">
             {places.map((place) => (
@@ -186,37 +160,51 @@ export default function SideBar({
             </div>
             <div className="flex justify-between border-b pb-1">
               <span className="font-semibold">Latitudine</span>
-              <span>{selectedPlace.location.lat}</span>
+              <span>{selectedPlace.location[0]}</span>
             </div>
             <div className="flex justify-between border-b pb-1">
               <span className="font-semibold">Longitudine</span>
-              <span>{selectedPlace.location.lon}</span>
+              <span>{selectedPlace.location[1]}</span>
             </div>
             <div className="flex justify-between border-b pb-1">
               <span className="font-semibold">Telefono</span>
               <span>{selectedPlace.phoneNumber || "Non disponibile"}</span>
             </div>
             <span className="font-semibold">Orari di apertura</span>
-            {selectedPlace.workingHour &&
-            selectedPlace.workingHour.length > 0 ? (
-              selectedPlace.workingHour.map((dayHour, index) => {
-                const [day, hours] = dayHour.split(": ");
-                return (
-                  <div
-                    key={index}
-                    className="flex justify-between text-gray-600 text-sm"
-                  >
-                    <span>{day}:</span>
-                    <span>{hours}</span>
-                  </div>
-                );
-              })
-            ) : (
-              <span className="text-gray-500">Non disponibile</span>
-            )}
+            <OpeningHourSection selectedPlace={selectedPlace} />
           </div>
         </Modal>
       )}
     </>
   );
+
+  function OpeningHourSection({ selectedPlace }: { selectedPlace: Place }) {
+    return (
+      <>
+        {" "}
+        {selectedPlace.workingHour ? (
+          Object.entries(selectedPlace.workingHour).map(([day, slots]) => (
+            <div
+              key={day}
+              className="flex justify-between text-gray-600 text-sm"
+            >
+              <span className="capitalize">{day}:</span>
+              <span>
+                {slots.length > 0
+                  ? slots.map((slot, i) => (
+                      <span key={i}>
+                        {slot.start}–{slot.end}
+                        {i < slots.length - 1 ? ", " : ""}
+                      </span>
+                    ))
+                  : "Closed"}
+              </span>
+            </div>
+          ))
+        ) : (
+          <span className="text-gray-500">Non disponibile</span>
+        )}
+      </>
+    );
+  }
 }

@@ -8,25 +8,12 @@ export default function Map({
   myPosition,
 }: {
   places: Place[];
-  myPosition: { lat: number; lon: number };
+  myPosition: [number, number];
 }) {
-  function getPositionFromCoordinates(coordinate: {
-    lat: number | string;
-    lon: number | string;
-  }): [number, number] {
-    if (typeof coordinate.lat === "string") {
-      coordinate.lat = parseFloat(coordinate.lat);
-    }
-    if (typeof coordinate.lon === "string") {
-      coordinate.lon = parseFloat(coordinate.lon);
-    }
-    return [coordinate.lat, coordinate.lon];
-  }
-
   return (
     <div className="w-full h-full absolute bg-gray-200 z-0">
       <MapContainer
-        center={getPositionFromCoordinates(myPosition)}
+        center={myPosition}
         zoom={12}
         scrollWheelZoom={true}
         className="w-full h-full"
@@ -38,15 +25,15 @@ export default function Map({
         {places.map((place) => (
           <LocationMarker key={place.id} place={place} />
         ))}
-        <MyPositionMarker position={getPositionFromCoordinates(myPosition)} />
-        <RecenterMap position={getPositionFromCoordinates(myPosition)} />
+        <MyPositionMarker position={myPosition} />
+        <RecenterMap position={myPosition} />
       </MapContainer>
     </div>
   );
 
   function LocationMarker({ place }: { place: Place }) {
     return (
-      <Marker position={getPositionFromCoordinates(place.location)}>
+      <Marker position={place.location}>
         <LocationMarkerPopup place={place} />
       </Marker>
     );

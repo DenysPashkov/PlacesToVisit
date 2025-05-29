@@ -2,7 +2,8 @@ import { useState } from "react";
 import { PlusIcon, MagnifyingGlassIcon } from "@heroicons/react/24/solid";
 import { GooglePlacesManager } from "../models/GooglePlacesManager";
 import type { Place } from "../models/Place";
-import { arrayUnion, doc, updateDoc, type Firestore } from "firebase/firestore";
+import { type Firestore } from "firebase/firestore";
+import { firebaseManager } from "../models/FirebaseManager";
 
 export default function CircleButton({
   setPlaces,
@@ -16,36 +17,16 @@ export default function CircleButton({
 
   // Function to add a new place to Firestore
   // It takes a Place object, converts it to JSON, and adds it to the "Places" array in the Firestore document
-  function addPlaceToFirestore(newPlace: Place) {
-    if (!db) {
-      console.log("Firestore is not initialized.");
-      return;
-    }
-
-    const docRef = doc(db, "LocationsStoring", "4IZszzf7m4xFrLQrGEcr");
-
-    updateDoc(docRef, {
-      Places: arrayUnion(newPlace.toJSON()),
-    })
-      .then(() => {
-        setPlaces(newPlace);
-      })
-      .catch((error) => {
-        console.error("Error adding place:", error);
-      });
-    {
-    }
-  }
 
   const handleSearch = () => {
     const gpManager = new GooglePlacesManager();
     gpManager
       .findPlaceId(searchValue)
-      .then((place) => {
-        if (place !== null) {
-          addPlaceToFirestore(place);
-          return;
-        }
+      .then((newPlace) => {
+        if (newPlace === null) return;
+        if (db === null) return;
+        firebaseManager.addPlace(db, newPlace, (place) => setPlaces(place));
+        return;
       })
       .catch((error) => {
         console.error("Error finding place:", error);

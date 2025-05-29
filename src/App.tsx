@@ -10,20 +10,19 @@ import { Firestore } from "firebase/firestore";
 function App() {
   const [places, setPlaces] = useState<Place[]>([]);
   const [db, setDB] = useState<Firestore | null>(null);
-  const [currentPosition, setCurrentPosition] = useState<{
-    lat: number;
-    lon: number;
-  }>({ lat: 40.9, lon: 14.3 });
+  const [currentPosition, setCurrentPosition] = useState<[number, number]>([
+    40.9, 14.3,
+  ]);
 
   // Initialize Firebase and Firestore
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setCurrentPosition({
-            lat: position.coords.latitude,
-            lon: position.coords.longitude,
-          });
+          setCurrentPosition([
+            position.coords.latitude,
+            position.coords.longitude,
+          ]);
         },
         (error) => {
           console.error("Error getting current position:", error);
