@@ -78,6 +78,7 @@ export class GooglePlacesManager {
 
     return new Promise((resolve, reject) => {
       service.getDetails(request, async (result, status) => {
+        console.log("@@@@ ", result);
         if (status === google.maps.places.PlacesServiceStatus.OK && result) {
           try {
             const location = result.geometry?.location;

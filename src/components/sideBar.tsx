@@ -187,26 +187,40 @@ export default function SideBar({
               <span>{selectedPlace.phoneNumber || "Non disponibile"}</span>
             </div>
             <span className="font-semibold">Orari di apertura</span>
-            {selectedPlace.workingHour &&
-            selectedPlace.workingHour.length > 0 ? (
-              selectedPlace.workingHour.map((dayHour, index) => {
-                const [day, hours] = dayHour.split(": ");
-                return (
-                  <div
-                    key={index}
-                    className="flex justify-between text-gray-600 text-sm"
-                  >
-                    <span>{day}:</span>
-                    <span>{hours}</span>
-                  </div>
-                );
-              })
-            ) : (
-              <span className="text-gray-500">Non disponibile</span>
-            )}
+            <OpeningHourSection selectedPlace={selectedPlace} />
           </div>
         </Modal>
       )}
     </>
   );
+
+  function OpeningHourSection({ selectedPlace }: { selectedPlace: Place }) {
+    return (
+      <>
+        {" "}
+        {selectedPlace.workingHour ? (
+          Object.entries(selectedPlace.workingHour).map(([day, slots]) => (
+            <div
+              key={day}
+              className="flex justify-between text-gray-600 text-sm"
+            >
+              <span className="capitalize">{day}:</span>
+              <span>
+                {slots.length > 0
+                  ? slots.map((slot, i) => (
+                      <span key={i}>
+                        {slot.start}–{slot.end}
+                        {i < slots.length - 1 ? ", " : ""}
+                      </span>
+                    ))
+                  : "Closed"}
+              </span>
+            </div>
+          ))
+        ) : (
+          <span className="text-gray-500">Non disponibile</span>
+        )}
+      </>
+    );
+  }
 }
