@@ -2,12 +2,8 @@ import { useEffect, useState } from "react";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { Place } from "../models/Place";
 import Modal from "./modal.js";
-import {
-  doc,
-  getDoc,
-  type Firestore,
-} from "firebase/firestore";
-import defaultRestaurant from "../assets/restaurant-img-default.png"
+import { doc, getDoc, type Firestore } from "firebase/firestore";
+import defaultRestaurant from "../assets/restaurant-img-default.png";
 
 export default function SideBar({
   places,
@@ -18,7 +14,7 @@ export default function SideBar({
   places: Place[];
   setPlaces: (places: Place[]) => void;
   db: Firestore | null;
-  currentPosition: { lat: number; lon: number } | null;
+  currentPosition: [number, number] | null;
 }) {
   const [distances, setDistances] = useState<{ [placeId: string]: number }>({});
   const [showModal, setShowModal] = useState(false);
@@ -59,16 +55,16 @@ export default function SideBar({
 
   // Haversine formula to calculate the distance between two coordinates, retun in kilometers
   function haversineDistance(
-    coord1: { lat: number; lon: number },
-    coord2: { lat: number; lon: number }
+    coord1: [number, number],
+    coord2: [number, number]
   ): number {
     const R = 6371;
-    const dLat = toRad(coord2.lat - coord1.lat);
-    const dLon = toRad(coord2.lon - coord1.lon);
+    const dLat = toRad(coord2[0] - coord1[0]);
+    const dLon = toRad(coord2[1] - coord1[1]);
     const a =
       Math.sin(dLat / 2) ** 2 +
-      Math.cos(toRad(coord1.lat)) *
-        Math.cos(toRad(coord2.lat)) *
+      Math.cos(toRad(coord1[0])) *
+        Math.cos(toRad(coord2[0])) *
         Math.sin(dLon / 2) ** 2;
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
@@ -77,15 +73,12 @@ export default function SideBar({
   // Function to calculate the distance from the user's current position to a destination
   // It takes the user's position and the destination's coordinates as input
   function getDistanceFromUser(
-    myPosition: { lat: number; lon: number },
-    destination: {
-      lat: string;
-      lon: string;
-    }
+    myPosition: [number, number],
+    destination: [number, number]
   ): number {
-    const lat = parseFloat(destination.lat);
-    const lon = parseFloat(destination.lon);
-    const destinationNumber = { lat, lon };
+    const lat = destination[0];
+    const lon = destination[1];
+    const destinationNumber: [number, number] = [lat, lon];
     return haversineDistance(myPosition, destinationNumber);
   }
 
@@ -97,10 +90,7 @@ export default function SideBar({
       return;
     }
 
-    async function fetchDistances(currentPosition: {
-      lat: number;
-      lon: number;
-    }) {
+    async function fetchDistances(currentPosition: [number, number]) {
       const distancesArray = await Promise.all(
         places.map(async (place) => {
           const distance = await getDistanceFromUser(
@@ -125,16 +115,16 @@ export default function SideBar({
   }, [places, currentPosition]);
 
   return (
-<>
-    <aside className="w-100 bg-white rounded-2xl shadow-xl p-6 h-[90vh] pointer-events-auto">
-      <div className="mb-4 relative">
-        <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-6 h-6" />
-        <input
-          type="search"
-          placeholder="Cerca..."
-          className="w-full pl-12 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
-        />
-      </div>
+    <>
+      <aside className="w-100 bg-white rounded-2xl shadow-xl p-6 h-[90vh] pointer-events-auto">
+        <div className="mb-4 relative">
+          <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-6 h-6" />
+          <input
+            type="search"
+            placeholder="Cerca..."
+            className="w-full pl-12 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
+          />
+        </div>
 
         {places.length > 0 ? (
           <nav className="flex flex-col gap-3">
@@ -186,11 +176,11 @@ export default function SideBar({
             </div>
             <div className="flex justify-between border-b pb-1">
               <span className="font-semibold">Latitudine</span>
-              <span>{selectedPlace.location.lat}</span>
+              <span>{selectedPlace.location[0]}</span>
             </div>
             <div className="flex justify-between border-b pb-1">
               <span className="font-semibold">Longitudine</span>
-              <span>{selectedPlace.location.lon}</span>
+              <span>{selectedPlace.location[1]}</span>
             </div>
             <div className="flex justify-between border-b pb-1">
               <span className="font-semibold">Telefono</span>

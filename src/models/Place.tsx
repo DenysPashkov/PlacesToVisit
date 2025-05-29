@@ -1,7 +1,7 @@
 export class Place {
   id: string;
   name: string;
-  location: { lat: string; lon: string };
+  location: [number, number];
   image: string;
   phoneNumber: string;
   workingHour: string[];
@@ -9,7 +9,7 @@ export class Place {
   constructor(
     id: string,
     name: string,
-    location: { lat: string; lon: string },
+    location: [number, number],
     image: string,
     phoneNumber: string,
     workingHour: string[]
@@ -40,10 +40,7 @@ export class Place {
 
     const id = json.id || "";
     const name = json.name || "";
-    const location = {
-      lat: json.location?.lat || "",
-      lon: json.location?.lon || "",
-    };
+    const location: [number, number] = [json.location?.lat, json.location?.lon];
     const image = json.image || "";
     const phoneNumber = json.phoneNumber || "";
     const workingHour = json.workingHour || [];

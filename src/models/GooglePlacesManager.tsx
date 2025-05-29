@@ -95,10 +95,7 @@ export class GooglePlacesManager {
               new Place(
                 placeId,
                 result.name || "Unknown",
-                {
-                  lat: location?.lat().toString() || "0",
-                  lon: location?.lng().toString() || "0",
-                },
+                [location?.lat() ?? NaN, location?.lng() ?? NaN],
                 base64Image,
                 result.formatted_phone_number || "N/A",
                 workingHours
