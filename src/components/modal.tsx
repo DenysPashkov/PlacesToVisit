@@ -18,8 +18,8 @@ export default function Modal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex backdrop-blur-sm items-center justify-center z-50 pointer-events-auto">
-      <div className="bg-white rounded-xl p-6 shadow-xl max-w-md w-full relative">
+    <div className="fixed inset-0 flex backdrop-blur-sm items-center justify-center z-50 pointer-events-auto h-screen">
+      <div className="bg-white rounded-xl p-6 shadow-xl max-w-md w-full relative h-[70%] overflow-y-auto">
         <h2 className="text-xl font-bold mb-4">{title}</h2>
 
         <div className="mb-6">{children}</div>

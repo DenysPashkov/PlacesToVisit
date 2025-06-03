@@ -1,8 +1,9 @@
 import type { Firestore } from "firebase/firestore";
 import type { DayName, Place } from "../models/Place";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { firebaseManager } from "../models/FirebaseManager";
 import Modal from "./modal";
+import type { Review } from "../models/Reviews";
 
 export function SidebarCardModal({
   setSelectedPlace,
@@ -13,10 +14,14 @@ export function SidebarCardModal({
   selectedPlace: Place;
   db: Firestore | null;
 }) {
+  const [reviews, setReviews] = useState<Review[]>([]);
+
   useEffect(() => {
     findReviews();
   }, []);
 
+  // Function to fetch reviews for the selected place
+  // It checks if the Firestore instance is initialized and then calls the fetchReviews method from firebaseManager
   const findReviews = () => {
     if (!db) {
       console.log("Firestore is not initialized.");
@@ -24,7 +29,7 @@ export function SidebarCardModal({
     }
     firebaseManager.fetchReviews(db, selectedPlace.id, (reviews) => {
       // getting the reviews from the firebase manager
-      console.log("Fetched reviews:", reviews);
+      setReviews(reviews);
     });
   };
 
@@ -131,6 +136,14 @@ export function SidebarCardModal({
             <span className="text-gray-500">Non disponibile</span>
           )}
         </SidebarCardModalCell>
+        {reviews.length > 0 && (
+          <div className=" space-y-2 max-h-[80%] overflow-y-auto">
+            <h3 className="text-md font-bold">Recensioni</h3>
+            {reviews.map((review) => (
+              <ReviewCell key={review.reviewId} review={review} />
+            ))}
+          </div>
+        )}
       </div>
     </Modal>
   );
@@ -188,6 +201,54 @@ function SidebarCardModalCell({
     <div className="flex justify-between border-b pb-3">
       <span className="font-semibold">{label}</span>
       <span>{children}</span>
+    </div>
+  );
+}
+
+function renderStars(rating: number) {
+  return (
+    <span className="text-yellow-500">
+      {Array.from({ length: 5 }, (_, i) => (
+        <span key={i}>{i < rating ? "★" : "☆"}</span>
+      ))}
+    </span>
+  );
+}
+
+function ReviewCell({ review }: { review: Review }) {
+  return (
+    <div className="border rounded p-4 shadow-sm bg-white space-y-3 text-sm mb-4">
+      <div className="flex justify-between items-center">
+        <span className="font-semibold">{review.reviewer}</span>
+        <span className="text-gray-400 text-xs">
+          #{review.reviewId.slice(0, 6)}
+        </span>
+      </div>
+
+      <div className="space-y-1 text-gray-700">
+        <div className="flex justify-between items-center">
+          <span className="w-24">🍽️ Food</span>
+          {renderStars(review.food)}
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="w-24">💰 Price</span>
+          {renderStars(review.price)}
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="w-24">📍 Location</span>
+          {renderStars(review.location)}
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="w-24">👥 Service</span>
+          {renderStars(review.service)}
+        </div>
+      </div>
+
+      {review.comment && (
+        <p className="text-gray-600 italic border-t pt-2 mt-2">
+          {review.comment}
+        </p>
+      )}
     </div>
   );
 }
