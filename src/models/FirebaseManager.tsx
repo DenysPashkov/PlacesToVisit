@@ -9,7 +9,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { Place } from "./Place";
-import type { Review } from "./Reviews";
+import { Review } from "./Reviews";
 
 /**
  * Manages Firestore operations related to Places.
@@ -88,7 +88,7 @@ export class firebaseManager {
   static async fetchReviews(
     db: Firestore,
     placeId: string,
-    setReviews: (review: Review) => void
+    setReviews: (review: Review[]) => void
   ) {
     const reviewRef = collection(
       db,
@@ -102,14 +102,18 @@ export class firebaseManager {
     try {
       const snapshot = await getDocs(reviewRef);
 
-      snapshot.docs.map((doc) => {
+      const reviews: Review[] = [];
+
+      snapshot.docs.forEach((doc) => {
         const data = doc.data();
+
+        const review = Review.constructorJson(data);
+        reviews.push(review);
       });
 
-      //   return reviews;
+      setReviews(reviews);
     } catch (error) {
       console.error("Error fetching reviews:", error);
-      //   return [];
     }
   }
 
