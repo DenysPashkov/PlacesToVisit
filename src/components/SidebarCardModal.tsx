@@ -1,9 +1,10 @@
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import type { Firestore } from "firebase/firestore";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { firebaseManager } from "../models/FirebaseManager";
 import type { Place, DayName } from "../models/Place";
 import { SidebarInfo } from "./SidebarInfo";
+import type { Review } from "../models/Reviews";
 
 export function SidebarCardModal({
   setSelectedPlace,
@@ -18,6 +19,8 @@ export function SidebarCardModal({
     findReviews();
   }, []);
 
+  const [reviews, setReviews] = useState<Review[]>([]);
+
   const findReviews = () => {
     if (!db) {
       console.log("Firestore is not initialized.");
@@ -26,11 +29,12 @@ export function SidebarCardModal({
     firebaseManager.fetchReviews(db, selectedPlace.id, (reviews) => {
       // getting the reviews from the firebase manager
       console.log("Fetched reviews:", reviews);
+      setReviews(reviews);
     });
   };
 
   return (
-    <aside className="fixed top-10 left-110 w-[330px] bg-white shadow-xl p-6 z-50 rounded-l-2xl overflow-y-auto pointer-events-auto">
+    <aside className="fixed top-10 left-110 w-[330px] bg-white shadow-xl p-6 z-50 rounded-l-2xl overflow-y-auto pointer-events-auto max-h-[70%]">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-semibold">{selectedPlace.name}</h2>
         <button onClick={() => setSelectedPlace(null)}>
@@ -56,8 +60,40 @@ export function SidebarCardModal({
         <SidebarCardModalOpeningHours selectedPlace={selectedPlace} />
 
         <SidebarCardModalTags selectedPlace={selectedPlace} />
+
+        <SidebarCardModalReviews reviews={reviews} />
       </div>
     </aside>
+  );
+}
+
+function SidebarCardModalReviews({ reviews }: { reviews: Review[] }) {
+  if (reviews.length <= 0) {
+    return <></>;
+  }
+
+  return (
+    <SidebarInfo label="Recensioni">
+      <div className="space-y-4">
+        {reviews.map((review) => (
+          <div
+            key={review.reviewId}
+            className="border p-2 rounded shadow-sm text-sm text-gray-700 bg-gray-50"
+          >
+            <div className="font-semibold text-gray-800">{review.reviewer}</div>
+            <div className="text-xs text-gray-500 italic mb-1">
+              "{review.comment}"
+            </div>
+            <div className="grid grid-cols-2 gap-1 text-xs">
+              <span>🍽 Cibo: {review.food}/5</span>
+              <span>💰 Prezzo: {review.price}/5</span>
+              <span>📍 Posizione: {review.location}/5</span>
+              <span>🛎 Servizio: {review.service}/5</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </SidebarInfo>
   );
 }
 
