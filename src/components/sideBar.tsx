@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Place } from "../models/Place";
-import Modal from "./modal.js";
 import { doc, getDoc, type Firestore } from "firebase/firestore";
 import defaultRestaurant from "../assets/restaurant-img-default.png";
+import Modal from "../components/modal";
+import StarRating from "../components/starRating";
 
 export default function SideBar({
   places,
@@ -17,10 +18,9 @@ export default function SideBar({
   currentPosition: { lat: number; lon: number } | null;
 }) {
   const [distances, setDistances] = useState<{ [placeId: string]: number }>({});
-  const [showModal, setShowModal] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
-  const [query, setQuery] = useState("");
-  const [allPlaces, setAllPlaces] = useState<Place[]>([]);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [rating, setRating] = useState(0);
 
   // Function to fetch places from Firestore
   // It retrieves the document with the specified ID and extracts the Places array
@@ -37,38 +37,22 @@ export default function SideBar({
             return Place.constructorJson(place);
           });
           setPlaces(constructedPlaces);
-          setAllPlaces(constructedPlaces);
         });
     } else {
       console.error("Firestore is not initialized.");
     }
   }
 
-  // Filter places at every changes
-  useEffect(() => {
-    if (!query.trim()) {
-      setPlaces(allPlaces); // reset
-    } else {
-      const filtered = allPlaces.filter((place) =>
-        place.name.toLowerCase().includes(query.toLowerCase())
-      );
-      setPlaces(filtered);
-    }
-  }, [query, allPlaces]);
-  
-
   // Fetch places from Firestore when the component mounts or when db changes
   // This effect runs only once when the component mounts or when the db changes
   useEffect(() => {
     fetchData();
   }, [db]);
-
   // Function to convert degrees to radians
   // This is used in the Haversine formula to calculate distances
   function toRad(value: number): number {
     return (value * Math.PI) / 180;
   }
-
   // Haversine formula to calculate the distance between two coordinates, retun in kilometers
   function haversineDistance(
     coord1: { lat: number; lon: number },
@@ -85,7 +69,6 @@ export default function SideBar({
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   }
-
   // Function to calculate the distance from the user's current position to a destination
   // It takes the user's position and the destination's coordinates as input
   function getDistanceFromUser(
@@ -100,7 +83,6 @@ export default function SideBar({
     const destinationNumber = { lat, lon };
     return haversineDistance(myPosition, destinationNumber);
   }
-
   // Fetch distances for each place from the user's current position, may can be optimized
   // to avoid recalculating if the current position hasn't changed
   // This effect runs whenever places or currentPosition changes
@@ -108,7 +90,6 @@ export default function SideBar({
     if (currentPosition === null) {
       return;
     }
-
     async function fetchDistances(currentPosition: {
       lat: number;
       lon: number;
@@ -122,15 +103,12 @@ export default function SideBar({
           return { [place.id]: distance };
         })
       );
-
       // Merge array of objects into one object
       const distancesObj = distancesArray.reduce((acc, curr) => {
         return { ...acc, ...curr };
       }, {});
-
       setDistances(distancesObj);
     }
-
     if (places.length > 0) {
       fetchDistances(currentPosition);
     }
@@ -144,8 +122,6 @@ export default function SideBar({
           <input
             type="search"
             placeholder="Cerca..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
             className="w-full pl-12 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
           />
         </div>
@@ -157,7 +133,6 @@ export default function SideBar({
                 key={place.id}
                 onClick={() => {
                   setSelectedPlace(place);
-                  setShowModal(true);
                 }}
                 className="cursor-pointer bg-white p-4 rounded-lg shadow-md border flex items-center gap-4 hover:bg-gray-50"
               >
@@ -180,15 +155,17 @@ export default function SideBar({
         ) : (
           <p className="text-gray-500">Nessun posto trovato.</p>
         )}
-      </aside>
-      {showModal && selectedPlace && (
-        <Modal
-          isOpen={showModal}
-          onClose={() => setShowModal(false)}
-          onSave={() => setShowModal(false)}
-          title={selectedPlace.name}
-          actionButtonText="Chiudi"
-        >
+      </aside>{" "}
+      {/* Right Sidebar: Place Details */}
+      {selectedPlace && (
+        <aside className="fixed top-10 left-110 w-[330px]  bg-white shadow-xl p-6 z-50 rounded-l-2xl overflow-y-auto pointer-events-auto">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold">{selectedPlace.name}</h2>
+            <button onClick={() => setSelectedPlace(null)}>
+              <XMarkIcon className="w-6 h-6 text-gray-600 hover:text-black" />
+            </button>
+          </div>
+
           <div className="space-y-4 text-sm text-gray-700">
             <div className="flex justify-between border-b pb-1">
               <span className="font-semibold">Distanza</span>
@@ -228,6 +205,28 @@ export default function SideBar({
             ) : (
               <span className="text-gray-500">Non disponibile</span>
             )}
+          </div>
+          <div className="mt-4">
+            <button
+              onClick={() => setShowReviewModal(true)}
+              className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+            >
+              Recensione
+            </button>
+          </div>
+        </aside>
+      )}
+      {/* Modale recensione */}
+      {showReviewModal && (
+        <Modal
+          isOpen={showReviewModal}
+          onClose={() => setShowReviewModal(false)}
+          onSave={() => setShowReviewModal(false)}
+          title={`Recensioni per ${selectedPlace?.name}`}
+          actionButtonText="Chiudi"
+        >
+          <div className="flex justify-center">
+            <StarRating rating={rating} setRating={setRating} />
           </div>
         </Modal>
       )}
