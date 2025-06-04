@@ -42,6 +42,7 @@ export default function SideBar({
       console.error("Firestore is not initialized.");
     }
   }
+  
 
   // Fetch places from Firestore when the component mounts or when db changes
   // This effect runs only once when the component mounts or when the db changes
@@ -114,6 +115,26 @@ export default function SideBar({
     }
   }, [places, currentPosition]);
 
+  function getDomainLabel(url: string): string {
+    try {
+      const { hostname } = new URL(url);
+      const friendlyDomains: Record<string, string> = {
+        "maps.google.com": "Google Maps",
+        "www.google.com": "Google",
+        "facebook.com": "Facebook",
+        "instagram.com": "Instagram",
+        "tripadvisor.it": "TripAdvisor",
+      };
+      if (hostname in friendlyDomains) return friendlyDomains[hostname];
+      const noWww = hostname.replace(/^www\./, "");
+      const parts = noWww.split(".");
+      return parts.length > 2 ? parts[parts.length - 2] : parts[0];
+    } catch {
+      return url;
+    }
+  }
+  
+
   return (
     <>
       <aside className="w-100 bg-white rounded-2xl shadow-xl p-6 h-[90vh] pointer-events-auto">
@@ -158,62 +179,80 @@ export default function SideBar({
       </aside>{" "}
       {/* Right Sidebar: Place Details */}
       {selectedPlace && (
-        <aside className="fixed top-10 left-110 w-[330px]  bg-white shadow-xl p-6 z-50 rounded-l-2xl overflow-y-auto pointer-events-auto">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold">{selectedPlace.name}</h2>
-            <button onClick={() => setSelectedPlace(null)}>
-              <XMarkIcon className="w-6 h-6 text-gray-600 hover:text-black" />
-            </button>
-          </div>
-
-          <div className="space-y-4 text-sm text-gray-700">
-            <div className="flex justify-between border-b pb-1">
-              <span className="font-semibold">Distanza</span>
-              <span>
-                {distances[selectedPlace.id] !== undefined
-                  ? `${distances[selectedPlace.id].toFixed(2)} km`
-                  : "Calcolo..."}
-              </span>
-            </div>
-            <div className="flex justify-between border-b pb-1">
-              <span className="font-semibold">Latitudine</span>
-              <span>{selectedPlace.location.lat}</span>
-            </div>
-            <div className="flex justify-between border-b pb-1">
-              <span className="font-semibold">Longitudine</span>
-              <span>{selectedPlace.location.lon}</span>
-            </div>
-            <div className="flex justify-between border-b pb-1">
-              <span className="font-semibold">Telefono</span>
-              <span>{selectedPlace.phoneNumber || "Non disponibile"}</span>
-            </div>
-            <span className="font-semibold">Orari di apertura</span>
-            {selectedPlace.workingHour &&
-            selectedPlace.workingHour.length > 0 ? (
-              selectedPlace.workingHour.map((dayHour, index) => {
-                const [day, hours] = dayHour.split(": ");
-                return (
-                  <div
-                    key={index}
-                    className="flex justify-between text-gray-600 text-sm"
+        <aside className="fixed top-10 left-110 w-[330px] bg-white shadow-xl p-6 z-50 rounded-l-2xl overflow-y-auto pointer-events-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold">{selectedPlace.name}</h2>
+          <button onClick={() => setSelectedPlace(null)}>
+            <XMarkIcon className="w-6 h-6 text-gray-600 hover:text-black" />
+          </button>
+        </div>
+      
+        <div className="space-y-4 text-sm text-gray-700">
+          <SidebarInfo label="Distanza">
+            {distances[selectedPlace.id]?.toFixed(2) ?? "Calcolo..."} km
+          </SidebarInfo>
+          <SidebarInfo label="Indirizzo">{selectedPlace.readableAddress}</SidebarInfo>
+          <SidebarInfo label="Telefono">{selectedPlace.phoneNumber || "Non disponibile"}</SidebarInfo>
+          <SidebarInfo label="Fascia di prezzo">
+            {selectedPlace.priceLevel
+              ? "€".repeat(selectedPlace.priceLevel)
+              : "Non disponibile"}
+          </SidebarInfo>
+      
+          <SidebarInfo label="Tag">
+            {selectedPlace.tags?.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {selectedPlace.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded text-xs"
                   >
-                    <span>{day}:</span>
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              "Non disponibile"
+            )}
+          </SidebarInfo>
+      
+          <SidebarInfo label="Url di riferimento">
+            {selectedPlace.urlReferences?.length > 0 ? (
+              <div className="flex flex-col gap-1">
+                {selectedPlace.urlReferences.map((url) => (
+                  <a
+                    key={url}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    {getDomainLabel(url)}
+                  </a>
+                ))}
+              </div>
+            ) : (
+              "Non disponibile"
+            )}
+          </SidebarInfo>
+      
+          <SidebarInfo label="Orari di apertura">
+            {Array.isArray(selectedPlace.workingHour) ? (
+              selectedPlace.workingHour.map((entry, i) => {
+                const [day, hours] = entry.split(": ");
+                return (
+                  <div key={i} className="flex justify-between text-gray-600 text-sm">
+                    <span>{day}</span>
                     <span>{hours}</span>
                   </div>
                 );
               })
             ) : (
-              <span className="text-gray-500">Non disponibile</span>
+              "Non disponibile"
             )}
-          </div>
-          <div className="mt-4">
-            <button
-              onClick={() => setShowReviewModal(true)}
-              className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
-            >
-              Recensione
-            </button>
-          </div>
+          </SidebarInfo>
+        </div>
+      
         </aside>
       )}
       {/* Modale recensione */}
@@ -233,3 +272,19 @@ export default function SideBar({
     </>
   );
 }
+
+function SidebarInfo({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col border-b pb-2">
+      <span className="font-semibold">{label}</span>
+      <span className="text-gray-600">{children}</span>
+    </div>
+  );
+}
+

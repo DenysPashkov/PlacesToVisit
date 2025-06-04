@@ -5,6 +5,10 @@ export class Place {
   image: string;
   phoneNumber: string;
   workingHour: string[];
+  readableAddress: string;
+  priceLevel: number;
+  tags: string[];
+  urlReferences: string[];
 
   constructor(
     id: string,
@@ -12,7 +16,11 @@ export class Place {
     location: { lat: string; lon: string },
     image: string,
     phoneNumber: string,
-    workingHour: string[]
+    workingHour: string[],
+    readableAddress: string,
+    priceLevel: number,
+    tags: string[],
+    urlReferences: string[]
   ) {
     this.id = id;
     this.name = name;
@@ -20,6 +28,10 @@ export class Place {
     this.image = image;
     this.phoneNumber = phoneNumber;
     this.workingHour = workingHour;
+    this.readableAddress = readableAddress;
+    this.priceLevel = priceLevel;
+    this.tags = tags;
+    this.urlReferences = urlReferences;
   }
 
   toJSON() {
@@ -30,6 +42,10 @@ export class Place {
       image: this.image,
       phoneNumber: this.phoneNumber,
       workingHour: this.workingHour,
+      readableAddress: this.readableAddress,
+      priceLevel: this.priceLevel,
+      tags: this.tags,
+      urlReferences: this.urlReferences,
     };
   }
 
@@ -47,15 +63,23 @@ export class Place {
     const image = json.image || "";
     const phoneNumber = json.phoneNumber || "";
     const workingHour = json.workingHour || [];
+    const readableAddress = json.readableAddress || "";
+    const priceLevel = json.priceLevel ?? 0;
+    const tags = json.tags || [];
+    const urlReferences = json.urlReferences || [];
 
-    const place = new Place(
+    return new Place(
       id,
       name,
       location,
       image,
       phoneNumber,
-      workingHour
+      workingHour,
+      readableAddress,
+      priceLevel,
+      tags,
+      urlReferences
     );
-    return place;
   }
 }
+
