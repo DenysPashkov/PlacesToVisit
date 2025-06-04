@@ -1,5 +1,12 @@
-function StarRating({ rating, setRating }: StarRatingProps) {
+import { useEffect, useState } from "react";
+
+export function StarRating({ setRating }: StarRatingProps) {
+  const [rating, setLocalRating] = useState(0);
   const maxStars = 5;
+
+  useEffect(() => {
+    setRating(rating);
+  }, [rating]);
 
   return (
     <div className="flex space-x-1">
@@ -9,7 +16,7 @@ function StarRating({ rating, setRating }: StarRatingProps) {
           <button
             key={starIndex}
             type="button"
-            onClick={() => setRating(starIndex)}
+            onClick={() => setLocalRating(starIndex)}
             className="focus:outline-none"
             aria-label={`Valuta ${starIndex} stelle`}
           >
@@ -31,6 +38,5 @@ function StarRating({ rating, setRating }: StarRatingProps) {
 }
 
 export interface StarRatingProps {
-  rating: number;
   setRating: (value: number) => void;
 }

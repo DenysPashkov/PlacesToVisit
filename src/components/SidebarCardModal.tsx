@@ -1,10 +1,12 @@
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import type { Firestore } from "firebase/firestore";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { firebaseManager } from "../models/FirebaseManager";
 import type { Place, DayName } from "../models/Place";
 import { SidebarInfo } from "./SidebarInfo";
-import type { Review } from "../models/Reviews";
+import { Review } from "../models/Reviews";
+import { StarRating } from "./StarRating";
+import Modal from "./modal";
 
 export function SidebarCardModal({
   setSelectedPlace,
@@ -20,6 +22,7 @@ export function SidebarCardModal({
   }, []);
 
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [newReview, setNewReview] = useState<Review | null>(null);
 
   const findReviews = () => {
     if (!db) {
@@ -32,6 +35,40 @@ export function SidebarCardModal({
       setReviews(reviews);
     });
   };
+
+  function generateUUID(): string {
+    return crypto.randomUUID();
+  }
+
+  function handleSaveReview() {
+    console.log("Saving review:", newReview);
+    if (!db) {
+      return;
+    }
+    if (!newReview) {
+      console.error("No review to save");
+      return;
+    }
+    firebaseManager.addReview(db, newReview, (review) => {
+      setReviews((prev) => [...prev, review]);
+    });
+    setNewReview(null);
+  }
+
+  function startReviewCreation() {
+    const newReview = new Review(
+      generateUUID(),
+      selectedPlace.id,
+      "",
+      0,
+      0,
+      0,
+      0,
+      ""
+    );
+
+    setNewReview(newReview);
+  }
 
   return (
     <aside className="fixed top-10 left-110 w-[330px] bg-white shadow-xl p-6 z-50 rounded-l-2xl overflow-y-auto pointer-events-auto max-h-[70%]">
@@ -62,7 +99,35 @@ export function SidebarCardModal({
         <SidebarCardModalTags selectedPlace={selectedPlace} />
 
         <SidebarCardModalReviews reviews={reviews} />
+
+        <button
+          onClick={() => {
+            startReviewCreation();
+          }}
+          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
+        >
+          Aggiungi
+        </button>
       </div>
+
+      {newReview && (
+        <Modal
+          isOpen={newReview !== null}
+          onClose={() => {
+            setNewReview(null);
+          }}
+          onSave={() => {
+            handleSaveReview();
+          }}
+          title="Aggiungi una recensione"
+          actionButtonText="Aggiungi"
+        >
+          <SidebarCardModalReviewModal
+            review={newReview}
+            setReview={setNewReview}
+          ></SidebarCardModalReviewModal>
+        </Modal>
+      )}
     </aside>
   );
 }
@@ -210,5 +275,88 @@ function SidebarCardModalLinksReferences({
         </div>
       }
     </SidebarInfo>
+  );
+}
+export function SidebarCardModalReviewModal({
+  review,
+  setReview,
+}: {
+  review: Review;
+  setReview: React.Dispatch<React.SetStateAction<Review | null>>;
+}) {
+  const updateReviewField = <K extends keyof Review>(
+    key: K,
+    value: Review[K]
+  ) => {
+    setReview(
+      new Review(
+        key === "reviewId" ? (value as string) : review.reviewId,
+        key === "placeId" ? (value as string) : review.placeId,
+        key === "reviewer" ? (value as string) : review.reviewer,
+        key === "food" ? (value as number) : review.food,
+        key === "price" ? (value as number) : review.price,
+        key === "location" ? (value as number) : review.location,
+        key === "service" ? (value as number) : review.service,
+        key === "comment" ? (value as string) : review.comment
+      )
+    );
+  };
+
+  return (
+    <div className="max-w-md p-6 border border-gray-300 rounded-lg shadow-sm bg-white">
+      <h3 className="text-lg font-semibold mb-4">Review Form</h3>
+
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Reviewer
+        </label>
+        <input
+          type="text"
+          value={review.reviewer}
+          onChange={(e) => updateReviewField("reviewer", e.target.value)}
+          className="w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Food
+        </label>
+        <StarRating setRating={(val) => updateReviewField("food", val)} />
+      </div>
+
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Price
+        </label>
+        <StarRating setRating={(val) => updateReviewField("price", val)} />
+      </div>
+
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Location
+        </label>
+        <StarRating setRating={(val) => updateReviewField("location", val)} />
+      </div>
+
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Service
+        </label>
+        <StarRating setRating={(val) => updateReviewField("service", val)} />
+      </div>
+
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Comment
+        </label>
+        <textarea
+          value={review.comment}
+          onChange={(e) => updateReviewField("comment", e.target.value)}
+          rows={3}
+          className="w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+    </div>
   );
 }
