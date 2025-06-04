@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
-import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { Place } from "../models/Place";
-import { doc, getDoc, type Firestore } from "firebase/firestore";
-import defaultRestaurant from "../assets/restaurant-img-default.png";
-import Modal from "../components/modal";
-import StarRating from "../components/starRating";
+import Modal from "./modal.js";
+import {
+  doc,
+  getDoc,
+  type Firestore,
+} from "firebase/firestore";
+import defaultRestaurant from "../assets/restaurant-img-default.png"
 
 export default function SideBar({
   places,
@@ -18,10 +21,8 @@ export default function SideBar({
   currentPosition: { lat: number; lon: number } | null;
 }) {
   const [distances, setDistances] = useState<{ [placeId: string]: number }>({});
+  const [showModal, setShowModal] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
-  const [showReviewModal, setShowReviewModal] = useState(false);
-  const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState(0);
 
   // Function to fetch places from Firestore
   // It retrieves the document with the specified ID and extracts the Places array
@@ -124,16 +125,16 @@ export default function SideBar({
   }, [places, currentPosition]);
 
   return (
-    <>
-      <aside className="w-100 bg-white rounded-2xl shadow-xl p-6 h-[90vh] pointer-events-auto">
-        <div className="mb-4 relative">
-          <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-6 h-6" />
-          <input
-            type="search"
-            placeholder="Cerca..."
-            className="w-full pl-12 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
-          />
-        </div>
+<>
+    <aside className="w-100 bg-white rounded-2xl shadow-xl p-6 h-[90vh] pointer-events-auto">
+      <div className="mb-4 relative">
+        <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-6 h-6" />
+        <input
+          type="search"
+          placeholder="Cerca..."
+          className="w-full pl-12 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
+        />
+      </div>
 
         {places.length > 0 ? (
           <nav className="flex flex-col gap-3">
@@ -142,6 +143,7 @@ export default function SideBar({
                 key={place.id}
                 onClick={() => {
                   setSelectedPlace(place);
+                  setShowModal(true);
                 }}
                 className="cursor-pointer bg-white p-4 rounded-lg shadow-md border flex items-center gap-4 hover:bg-gray-50"
               >
@@ -165,16 +167,14 @@ export default function SideBar({
           <p className="text-gray-500">Nessun posto trovato.</p>
         )}
       </aside>
-      {/* Right Sidebar: Place Details */}
-      {selectedPlace && (
-        <aside className="fixed top-10 left-110 w-[330px]  bg-white shadow-xl p-6 z-50 rounded-l-2xl overflow-y-auto pointer-events-auto">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold">{selectedPlace.name}</h2>
-            <button onClick={() => setSelectedPlace(null)}>
-              <XMarkIcon className="w-6 h-6 text-gray-600 hover:text-black" />
-            </button>
-          </div>
-
+      {showModal && selectedPlace && (
+        <Modal
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          onSave={() => setShowModal(false)}
+          title={selectedPlace.name}
+          actionButtonText="Chiudi"
+        >
           <div className="space-y-4 text-sm text-gray-700">
             <div className="flex justify-between border-b pb-1">
               <span className="font-semibold">Distanza</span>
@@ -214,28 +214,6 @@ export default function SideBar({
             ) : (
               <span className="text-gray-500">Non disponibile</span>
             )}
-          </div>
-          <div className="mt-4">
-            <button
-              onClick={() => setShowReviewModal(true)}
-              className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
-            >
-              Recensione
-            </button>
-          </div>
-        </aside>
-      )}
-      {/* Modale recensione */}
-      {showReviewModal && (
-        <Modal
-          isOpen={showReviewModal}
-          onClose={() => setShowReviewModal(false)}
-          onSave={() => setShowReviewModal(false)}
-          title={`Recensioni per ${selectedPlace?.name}`}
-          actionButtonText="Chiudi"
-        >
-          <div className="flex justify-center">
-            <StarRating rating={rating} setRating={setRating} />
           </div>
         </Modal>
       )}
