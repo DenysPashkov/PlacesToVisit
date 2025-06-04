@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Place, type DayName } from "../models/Place";
-import Modal from "./modal.js";
 import { doc, getDoc, type Firestore } from "firebase/firestore";
 import defaultRestaurant from "../assets/restaurant-img-default.png";
 import { firebaseManager } from "../models/FirebaseManager.js";
@@ -17,7 +16,6 @@ export default function SideBar({
   db: Firestore | null;
   currentPosition: [number, number] | null;
 }) {
-  const [distances, setDistances] = useState<{ [placeId: string]: number }>({});
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [query, setQuery] = useState("");
   const [allPlaces, setAllPlaces] = useState<Place[]>([]);
@@ -62,13 +60,6 @@ export default function SideBar({
     fetchData();
   }, [db]);
 
-  const addDistance = (placeId: string, distance: number) => {
-    setDistances((prevDistances) => ({
-      ...prevDistances,
-      [placeId]: distance,
-    }));
-  };
-
   return (
     <>
       g
@@ -91,7 +82,6 @@ export default function SideBar({
                 key={place.id}
                 place={place}
                 setSelectedPlace={setSelectedPlace}
-                addDistance={addDistance}
                 currentPosition={currentPosition}
               />
             ))}
@@ -104,7 +94,6 @@ export default function SideBar({
         <SidebarCardModal
           setSelectedPlace={setSelectedPlace}
           selectedPlace={selectedPlace}
-          distance={distances[selectedPlace.id]}
           db={db}
         />
       )}
@@ -112,17 +101,10 @@ export default function SideBar({
   );
 }
 
-function SidebarCard({
-  place,
-  setSelectedPlace,
-  addDistance,
-  currentPosition,
-}: {
-  place: Place;
-  setSelectedPlace: React.Dispatch<React.SetStateAction<Place | null>>;
-  addDistance: (placeId: string, distance: number) => void;
-  currentPosition: [number, number] | null;
-}) {
+function useGetDistanceFromUser(
+  currentPosition: [number, number] | null,
+  placePosition: [number, number]
+): number | null {
   // Function to convert degrees to radians
   // This is used in the Haversine formula to calculate distances
   function toRad(value: number): number {
@@ -162,14 +144,27 @@ function SidebarCard({
     return haversineDistance(myPositionNumber, destinationNumber);
   };
 
+  if (!currentPosition) return null;
+
+  return getDistanceFromUser(currentPosition, placePosition);
+}
+
+function SidebarCard({
+  place,
+  setSelectedPlace,
+  currentPosition,
+}: {
+  place: Place;
+  setSelectedPlace: React.Dispatch<React.SetStateAction<Place | null>>;
+  currentPosition: [number, number] | null;
+}) {
+  const [distance, setDistance] = useState<number | null>(null);
   useEffect(() => {
     if (!currentPosition) return;
-    const distance = getDistanceFromUser(currentPosition, place.location);
-    addDistance(place.id, distance);
+    const distance = useGetDistanceFromUser(currentPosition, place.location);
     setDistance(distance);
   }, [currentPosition]);
 
-  const [distance, setDistance] = useState<number | null>(null);
   return (
     <div
       key={place.id}
@@ -196,12 +191,10 @@ function SidebarCard({
 function SidebarCardModal({
   setSelectedPlace,
   selectedPlace,
-  distance,
   db,
 }: {
   setSelectedPlace: React.Dispatch<React.SetStateAction<Place | null>>;
   selectedPlace: Place;
-  distance: number | undefined;
   db: Firestore | null;
 }) {
   const daysOfWeek: DayName[] = [
@@ -229,61 +222,130 @@ function SidebarCardModal({
     });
   };
 
+  function getDomainLabel(url: string): string {
+    try {
+      const { hostname } = new URL(url);
+      const friendlyDomains: Record<string, string> = {
+        "maps.google.com": "Google Maps",
+        "www.google.com": "Google",
+        "facebook.com": "Facebook",
+        "instagram.com": "Instagram",
+        "tripadvisor.it": "TripAdvisor",
+      };
+      if (hostname in friendlyDomains) return friendlyDomains[hostname];
+      const noWww = hostname.replace(/^www\./, "");
+      const parts = noWww.split(".");
+      return parts.length > 2 ? parts[parts.length - 2] : parts[0];
+    } catch {
+      return url;
+    }
+  }
+
   return (
-    <Modal
-      isOpen={true}
-      onClose={() => setSelectedPlace(null)}
-      onSave={() => setSelectedPlace(null)}
-      title={selectedPlace.name}
-      actionButtonText="Chiudi"
-    >
-      <div className="space-y-4 text-sm text-gray-700">
-        <div className="flex justify-between border-b pb-1">
-          <span className="font-semibold">Distanza</span>
-          <span>{distance ? `${distance} km` : "Calcolo..."}</span>
-        </div>
-        <div className="flex justify-between border-b pb-1">
-          <span className="font-semibold">Latitudine</span>
-          <span>{selectedPlace.location[0]}</span>
-        </div>
-        <div className="flex justify-between border-b pb-1">
-          <span className="font-semibold">Longitudine</span>
-          <span>{selectedPlace.location[1]}</span>
-        </div>
-        <div className="flex justify-between border-b pb-1">
-          <span className="font-semibold">Telefono</span>
-          <span>{selectedPlace.phoneNumber || "Non disponibile"}</span>
-        </div>
-        <span className="font-semibold">Orari di apertura</span>
-        {selectedPlace.workingHour &&
-        Object.keys(selectedPlace.workingHour).length > 0 ? (
-          daysOfWeek.map((day) => {
-            const slots = selectedPlace.workingHour[day];
-
-            // If no slots for that day, skip rendering
-            if (!slots || slots.length === 0) return null;
-
-            const formattedHours = slots
-              .map((slot) => `${slot.start} - ${slot.end}`)
-              .join(", ");
-
-            // Capitalize the day name
-            const capitalizedDay = day.charAt(0).toUpperCase() + day.slice(1);
-
-            return (
-              <div
-                key={day}
-                className="flex justify-between text-gray-600 text-sm"
-              >
-                <span>{capitalizedDay}:</span>
-                <span>{formattedHours}</span>
-              </div>
-            );
-          })
-        ) : (
-          <span className="text-gray-500">Non disponibile</span>
-        )}
+    <aside className="fixed top-10 left-110 w-[330px] bg-white shadow-xl p-6 z-50 rounded-l-2xl overflow-y-auto pointer-events-auto">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-semibold">{selectedPlace.name}</h2>
+        <button onClick={() => setSelectedPlace(null)}>
+          <XMarkIcon className="w-6 h-6 text-gray-600 hover:text-black" />
+        </button>
       </div>
-    </Modal>
+
+      <div className="space-y-4 text-sm text-gray-700">
+        <SidebarInfo label="Indirizzo">
+          {selectedPlace.readableAddress}
+        </SidebarInfo>
+        <SidebarInfo label="Telefono">
+          {selectedPlace.phoneNumber || "Non disponibile"}
+        </SidebarInfo>
+        <SidebarInfo label="Fascia di prezzo">
+          {selectedPlace.priceLevel
+            ? "€".repeat(selectedPlace.priceLevel)
+            : "Non disponibile"}
+        </SidebarInfo>
+
+        <SidebarInfo label="Tag">
+          {selectedPlace.tags?.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {selectedPlace.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded text-xs"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          ) : (
+            "Non disponibile"
+          )}
+        </SidebarInfo>
+
+        <SidebarInfo label="Url di riferimento">
+          {selectedPlace.urlReferences?.length > 0 ? (
+            <div className="flex flex-col gap-1">
+              {selectedPlace.urlReferences.map((url) => (
+                <a
+                  key={url}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline"
+                >
+                  {getDomainLabel(url)}
+                </a>
+              ))}
+            </div>
+          ) : (
+            "Non disponibile"
+          )}
+        </SidebarInfo>
+
+        <SidebarInfo label="Orari di apertura">
+          {selectedPlace.workingHour &&
+          Object.keys(selectedPlace.workingHour).length > 0 ? (
+            daysOfWeek.map((day) => {
+              const slots = selectedPlace.workingHour[day];
+
+              // If no slots for that day, skip rendering
+              if (!slots || slots.length === 0) return null;
+
+              const formattedHours = slots
+                .map((slot) => `${slot.start} - ${slot.end}`)
+                .join(", ");
+
+              // Capitalize the day name
+              const capitalizedDay = day.charAt(0).toUpperCase() + day.slice(1);
+
+              return (
+                <div
+                  key={day}
+                  className="flex justify-between text-gray-600 text-sm"
+                >
+                  <span>{capitalizedDay}:</span>
+                  <span>{formattedHours}</span>
+                </div>
+              );
+            })
+          ) : (
+            <span className="text-gray-500">Non disponibile</span>
+          )}
+        </SidebarInfo>
+      </div>
+    </aside>
+  );
+}
+
+function SidebarInfo({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col border-b pb-2">
+      <span className="font-semibold">{label}</span>
+      <span className="text-gray-600">{children}</span>
+    </div>
   );
 }
