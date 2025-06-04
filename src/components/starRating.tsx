@@ -5,7 +5,7 @@ interface StarRatingProps {
 
 export default function StarRating({ rating, setRating }: StarRatingProps) {
   const maxStars = 5;
-
+ 
   return (
     <div className="flex space-x-1">
       {[...Array(maxStars)].map((_, i) => {

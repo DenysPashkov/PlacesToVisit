@@ -21,7 +21,6 @@ export default function SideBar({
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState(0);
 
   // Function to fetch places from Firestore
   // It retrieves the document with the specified ID and extracts the Places array
