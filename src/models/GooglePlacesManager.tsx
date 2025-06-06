@@ -1,4 +1,4 @@
-import { Place } from "./Place";
+import { Place, type DayName, type OpeningHours } from "./Place";
 
 type LocationData = {
   name: string;
@@ -73,6 +73,10 @@ export class GooglePlacesManager {
         "formatted_phone_number",
         "photos",
         "opening_hours",
+        "formatted_address",
+        "website",
+        "url",
+        "price_level",
       ],
     };
 
@@ -89,19 +93,30 @@ export class GooglePlacesManager {
               base64Image = await this.fetchImageAsBase64(imageUrl);
             }
 
-            const workingHours = result.opening_hours?.weekday_text || [];
+            const workingHours = this.createOpeningHours(
+              result.opening_hours?.weekday_text || []
+            );
+            const readableAddress = result.formatted_address ?? "";
+
+            // populating url refereneces with the place website and the google location
+            const urlReferences: string[] = [];
+            if (result.url) urlReferences.push(result.url);
+            if (result.website) urlReferences.push(result.website);
+
+            const priceLevel = result.price_level ?? 0;
 
             resolve(
               new Place(
                 placeId,
                 result.name || "Unknown",
-                {
-                  lat: location?.lat().toString() || "0",
-                  lon: location?.lng().toString() || "0",
-                },
+                [location?.lat() ?? NaN, location?.lng() ?? NaN],
                 base64Image,
                 result.formatted_phone_number || "N/A",
-                workingHours
+                workingHours,
+                readableAddress,
+                [],
+                urlReferences,
+                priceLevel
               )
             );
           } catch (err) {
@@ -151,5 +166,72 @@ export class GooglePlacesManager {
       console.error("Invalid URL:", error);
       return null;
     }
+  }
+
+  // function required for create the OpeningHour from the information received from google
+  createOpeningHours(weekday_text: string[]): OpeningHours {
+    const daysMap: Record<string, DayName> = {
+      Monday: "monday",
+      Tuesday: "tuesday",
+      Wednesday: "wednesday",
+      Thursday: "thursday",
+      Friday: "friday",
+      Saturday: "saturday",
+      Sunday: "sunday",
+    };
+
+    const convertTo24Hour = (timeStr: string): string => {
+      if (!timeStr || typeof timeStr !== "string") {
+        return "00:00";
+      }
+
+      // Normalize different unicode spaces to regular space
+      const clean = timeStr
+        .replace(/[\u2000-\u200F\u202F\u205F\u3000]/g, " ") // all uncommon Unicode space characters
+        .trim();
+
+      const parts = clean.split(/(AM|PM)/i);
+
+      if (parts.length < 2) {
+        return "00:00";
+      }
+
+      const [time, modifier] = parts;
+      let [hours, minutes] = time.trim().split(":").map(Number);
+
+      const isPM = modifier.toLowerCase() === "pm";
+      const isAM = modifier.toLowerCase() === "am";
+
+      if (isPM && hours !== 12) hours += 12;
+      if (isAM && hours === 12) hours = 0;
+
+      return `${hours.toString().padStart(2, "0")}:${minutes
+        .toString()
+        .padStart(2, "0")}`;
+    };
+
+    const output = {} as OpeningHours;
+
+    weekday_text.forEach((entry) => {
+      const [rawDay, rawTimes] = entry.split(": ");
+      const day = daysMap[rawDay];
+
+      if (!day) return;
+
+      if (!rawTimes || rawTimes.toLowerCase() === "closed") {
+        output[day] = [];
+      } else {
+        const ranges = rawTimes.split(",").map((range) => {
+          const [startRaw, endRaw] = range.split("–").map((s) => s.trim());
+          return {
+            start: convertTo24Hour(startRaw),
+            end: convertTo24Hour(endRaw),
+          };
+        });
+        output[day] = ranges;
+      }
+    });
+
+    return output;
   }
 }
