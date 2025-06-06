@@ -26,7 +26,6 @@ export default function FloatingAddButton({
       </button>
       {showSearch && (
         <FloatingAddButtonSearchBar
-          db={db}
           setPlaces={(place) => {
             setPlaceToModify(place);
             setShowSearch(false);
@@ -38,7 +37,10 @@ export default function FloatingAddButton({
       {placeToModify && (
         <UpdatePlaceDetailInformations
           setPlaceToModify={setPlaceToModify}
-          setPlaces={setPlaces}
+          setPlaces={(place) => {
+            if (db === null) return;
+            firebaseManager.addPlace(db, place, (place) => setPlaces(place));
+          }}
           placeholderPlace={placeToModify}
         />
       )}
@@ -47,11 +49,9 @@ export default function FloatingAddButton({
 }
 
 function FloatingAddButtonSearchBar({
-  db,
   setPlaces,
   setShowSearch,
 }: {
-  db: Firestore | null;
   setPlaces: (place: Place) => void;
   setShowSearch: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
@@ -66,8 +66,7 @@ function FloatingAddButtonSearchBar({
       .findPlaceId(searchValue)
       .then((newPlace) => {
         if (newPlace === null) return;
-        if (db === null) return;
-        firebaseManager.addPlace(db, newPlace, (place) => setPlaces(place));
+        setPlaces(newPlace);
         return;
       })
       .catch((error) => {

@@ -85,6 +85,29 @@ export class firebaseManager {
       });
   }
 
+  static async updatePlace(
+    db: Firestore,
+    updatedPlace: Place,
+    currentPlaces: Place[],
+    setPlaces: (places: Place[]) => void
+  ) {
+    const docRef = doc(db, "LocationsStoring", "4IZszzf7m4xFrLQrGEcr");
+
+    try {
+      const updatedPlaces = currentPlaces.map((place) =>
+        place.id === updatedPlace.id ? updatedPlace : place
+      );
+
+      const serializedPlaces = updatedPlaces.map((p) => p.toJSON());
+
+      await setDoc(docRef, { Places: serializedPlaces }, { merge: true });
+
+      setPlaces(updatedPlaces); // update state with new list
+    } catch (error) {
+      console.error("Error updating place:", error);
+    }
+  }
+
   static async fetchReviews(
     db: Firestore,
     placeId: string,

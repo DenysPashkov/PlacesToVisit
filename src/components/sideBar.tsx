@@ -93,6 +93,8 @@ export default function SideBar({
           setSelectedPlace={setSelectedPlace}
           selectedPlace={selectedPlace}
           db={db}
+          places={places}
+          setPlaces={setPlaces}
         />
       )}
     </>

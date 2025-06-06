@@ -11,16 +11,20 @@ import { SidebarCardModalReviewModal } from "./SidebarCardModalReviewModal";
 import { SidebarCardModalTags } from "./SidebarCardModalTags";
 import { SidebarCardModalOpeningHours } from "./SidebarCardModalOpeningHours";
 import { SidebarCardModalLinksReferences } from "./SidebarCardModalLinksReferences";
-
+import { UpdatePlaceDetailInformations } from "./UpdatePlaceDetailInformations";
 
 export function SidebarCardModal({
   setSelectedPlace,
   selectedPlace,
   db,
+  places,
+  setPlaces,
 }: {
   setSelectedPlace: React.Dispatch<React.SetStateAction<Place | null>>;
   selectedPlace: Place;
   db: Firestore | null;
+  places: Place[];
+  setPlaces: (places: Place[]) => void;
 }) {
   useEffect(() => {
     findReviews();
@@ -28,6 +32,7 @@ export function SidebarCardModal({
 
   const [reviews, setReviews] = useState<Review[]>([]);
   const [newReview, setNewReview] = useState<Review | null>(null);
+  const [placeToUpdate, setPlaceToUpdate] = useState<Place | null>(null);
 
   const findReviews = () => {
     if (!db) {
@@ -35,8 +40,6 @@ export function SidebarCardModal({
       return;
     }
     firebaseManager.fetchReviews(db, selectedPlace.id, (reviews) => {
-      // getting the reviews from the firebase manager
-      console.log("Fetched reviews:", reviews);
       setReviews(reviews);
     });
   };
@@ -46,7 +49,6 @@ export function SidebarCardModal({
   }
 
   function handleSaveReview() {
-    console.log("Saving review:", newReview);
     if (!db) {
       return;
     }
@@ -107,6 +109,15 @@ export function SidebarCardModal({
 
         <button
           onClick={() => {
+            setPlaceToUpdate(selectedPlace);
+          }}
+          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
+        >
+          Modifica
+        </button>
+
+        <button
+          onClick={() => {
             startReviewCreation();
           }}
           className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
@@ -133,7 +144,37 @@ export function SidebarCardModal({
           ></SidebarCardModalReviewModal>
         </Modal>
       )}
+
+      {placeToUpdate && (
+        <Modal
+          isOpen={true}
+          onClose={() => {
+            setPlaceToUpdate(null);
+          }}
+          onSave={() => {
+            // Handle save logic for place update
+          }}
+          title="Modifica Recensione"
+          actionButtonText="Salva"
+        >
+          <UpdatePlaceDetailInformations
+            placeholderPlace={placeToUpdate}
+            setPlaces={(updatedPlace) => {
+              if (!db) return;
+              firebaseManager.updatePlace(
+                db,
+                updatedPlace,
+                places,
+                (places) => {
+                  setPlaces(places);
+                  setPlaceToUpdate(null);
+                }
+              );
+            }}
+            setPlaceToModify={setPlaceToUpdate}
+          />
+        </Modal>
+      )}
     </aside>
   );
 }
-
