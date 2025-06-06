@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { PlusIcon, MagnifyingGlassIcon } from "@heroicons/react/24/solid";
 import { GooglePlacesManager } from "../models/GooglePlacesManager";
-import type { Place } from "../models/Place";
+import { Place } from "../models/Place";
 import { type Firestore } from "firebase/firestore";
 import { firebaseManager } from "../models/FirebaseManager";
+import { UpdatePlaceDetailInformations } from "./UpdatePlaceDetailInformations";
 
-export default function CircleButton({
+export default function FloatingAddButton({
   setPlaces,
   db,
 }: {
@@ -13,6 +14,47 @@ export default function CircleButton({
   db: Firestore | null;
 }) {
   const [showSearch, setShowSearch] = useState(false);
+  const [placeToModify, setPlaceToModify] = useState<Place | null>(null);
+
+  return (
+    <div className="pointer-events-auto">
+      <button
+        onClick={() => setShowSearch(!showSearch)}
+        className="w-12 h-12 flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 transition"
+      >
+        <PlusIcon className="w-6 h-6 text-white" />
+      </button>
+      {showSearch && (
+        <FloatingAddButtonSearchBar
+          db={db}
+          setPlaces={(place) => {
+            setPlaceToModify(place);
+            setShowSearch(false);
+          }}
+          setShowSearch={setShowSearch}
+        />
+      )}
+
+      {placeToModify && (
+        <UpdatePlaceDetailInformations
+          setPlaceToModify={setPlaceToModify}
+          setPlaces={setPlaces}
+          placeholderPlace={placeToModify}
+        />
+      )}
+    </div>
+  );
+}
+
+function FloatingAddButtonSearchBar({
+  db,
+  setPlaces,
+  setShowSearch,
+}: {
+  db: Firestore | null;
+  setPlaces: (place: Place) => void;
+  setShowSearch: React.Dispatch<React.SetStateAction<boolean>>;
+}) {
   const [searchValue, setSearchValue] = useState("");
 
   // Function to add a new place to Firestore
@@ -40,52 +82,42 @@ export default function CircleButton({
   };
 
   return (
-    <div className="pointer-events-auto">
-      <button
-        onClick={() => setShowSearch(!showSearch)}
-        className="w-12 h-12 flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 transition"
+    <div
+      onClick={() => {
+        setShowSearch(false);
+        setSearchValue("");
+      }}
+      className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-40"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white  gap-4 rounded-xl shadow-xl w-full max-w-md relative p-6 flex flex-row items-center"
       >
-        <PlusIcon className="w-6 h-6 text-white" />
-      </button>
-      {showSearch && (
-        <div
-          onClick={() => {
-            setShowSearch(false);
-            setSearchValue("");
-          }}
-          className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-40"
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="bg-white  gap-4 rounded-xl shadow-xl w-full max-w-md relative p-6 flex flex-row items-center"
-          >
-            <div className="w-full relative my-2">
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-6 h-6 text-gray-400" />
+        <div className="w-full relative my-2">
+          <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-6 h-6 text-gray-400" />
 
-              <input
-                type="search"
-                placeholder="Cerca..."
-                autoFocus
-                value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
-                onKeyDown={handleKeyDown}
-                className="w-full h-10 pl-12 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <button
-              onClick={() => {
-                if (searchValue != "") {
-                  handleSearch();
-                }
-              }}
-              className="w-20 h-10 bg-blue-500 text-white px-2 rounded-lg hover:bg-blue-600 transition"
-            >
-              Add
-            </button>
-          </div>
+          <input
+            type="search"
+            placeholder="Cerca..."
+            autoFocus
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="w-full h-10 pl-12 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
         </div>
-      )}
+
+        <button
+          onClick={() => {
+            if (searchValue != "") {
+              handleSearch();
+            }
+          }}
+          className="w-20 h-10 bg-blue-500 text-white px-2 rounded-lg hover:bg-blue-600 transition"
+        >
+          Add
+        </button>
+      </div>
     </div>
   );
 }
