@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { Place } from "../models/Place";
-import { doc, getDoc, type Firestore } from "firebase/firestore";
 import { SidebarCardModal } from "./SidebarCardModal.js";
 import { SidebarCard } from "./SidebarCard.js";
+import { doc, getDoc, type Firestore } from "firebase/firestore";
 
 export default function SideBar({
   places,
@@ -26,7 +26,7 @@ export default function SideBar({
     if (db) {
       const docRef = doc(db, "LocationsStoring", "4IZszzf7m4xFrLQrGEcr");
       getDoc(docRef)
-        .then((querySnapshot) => {
+        .then((querySnapshot: { data: () => any }) => {
           const data = querySnapshot.data();
           return data?.Places as any[];
         })
@@ -53,7 +53,6 @@ export default function SideBar({
       setPlaces(filtered);
     }
   }, [query, allPlaces]);
-
   // Fetch places from Firestore when the component mounts or when db changes
   // This effect runs only once when the component mounts or when the db changes
   useEffect(() => {
@@ -62,7 +61,6 @@ export default function SideBar({
 
   return (
     <>
-      g
       <aside className="w-100 bg-white rounded-2xl shadow-xl p-6 h-[90vh] pointer-events-auto">
         <div className="mb-4 relative">
           <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-6 h-6" />
