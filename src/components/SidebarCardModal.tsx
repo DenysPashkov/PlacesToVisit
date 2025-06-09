@@ -1,6 +1,6 @@
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import type { Firestore } from "firebase/firestore";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { firebaseManager } from "../models/FirebaseManager";
 import type { Place, DayName } from "../models/Place";
 import { SidebarInfo } from "./SidebarInfo";
