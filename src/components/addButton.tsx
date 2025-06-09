@@ -86,7 +86,7 @@ function FloatingAddButtonSearchBar({
         setShowSearch(false);
         setSearchValue("");
       }}
-      className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-40"
+      className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-70"
     >
       <div
         onClick={(e) => e.stopPropagation()}
