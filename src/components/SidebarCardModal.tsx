@@ -78,7 +78,7 @@ export function SidebarCardModal({
   }
 
   return (
-    <aside className="fixed top-10 left-110 w-[330px] bg-white shadow-xl p-6 z-50 rounded-l-2xl overflow-y-auto pointer-events-auto max-h-[70%]">
+    <aside className="fixed top-10 z-1 left-110 w-[330px] bg-white shadow-xl p-6 z-50 rounded-l-2xl overflow-y-auto pointer-events-auto max-h-[70%]">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-semibold">{selectedPlace.name}</h2>
         <button onClick={() => setSelectedPlace(null)}>

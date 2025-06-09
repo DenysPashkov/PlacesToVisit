@@ -131,8 +131,9 @@ export class GooglePlacesManager {
 
   fetchImageAsBase64 = async (imageUrl: string): Promise<string> => {
     try {
+      console.log("Test ", encodeURIComponent(imageUrl));
       // Call your backend proxy server to fetch & convert the image to base64
-      const proxyUrl = `http://localhost:3001/api/fetch-place-image?imageUrl=${encodeURIComponent(
+      const proxyUrl = `http://denysflix.ddns.net:49161/api/fetch-place-image?imageUrl=${encodeURIComponent(
         imageUrl
       )}`;
 
